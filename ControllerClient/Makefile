@@ -7,7 +7,7 @@
 include env.mk
 include modules.mk
 
-TARGET    := wmServer
+TARGET    := controller
 CC        := g++
 LD        := g++
 
@@ -40,7 +40,7 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-all: checkdirs package-u mongoDB lib bin/$(TARGET)
+all: checkdirs package-u lib bin/$(TARGET)
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
 bin/$(TARGET): $(OBJ)
@@ -70,7 +70,6 @@ cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)userDB/*
 	@rm -rf $(DIR_APP_ROOT)deviceDB/*
 	@rm -rf $(DIR_APP_ROOT)configDB/*
-	@rm -rf $(DIR_APP_ROOT)ExtLibs/mongo-cxx-driver-v2.4/build
 	@rm -rf $(DIR_APP_ROOT)libs/*
 	
 mk_debug:
@@ -81,11 +80,6 @@ mk_debug:
 	@echo 'Build Director  : '$(BUILD_DIR)"\n"
 	@echo 'Link Library    : '$(LDLIBS)"\n"
 	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
-	
-mongoDB:
-	@cd $(DIR_APP_ROOT)ExtLibs/mongo-cxx-driver-v2.4 && scons;
-	@mv $(DIR_APP_ROOT)ExtLibs/mongo-cxx-driver-v2.4/libmongoclient.a $(DIR_APP_ROOT)/libs/libmongoclient.a
-	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	
 package-s:
 	yum -y install sqlite-devel.x86_64
