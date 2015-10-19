@@ -35,7 +35,8 @@
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -69,4 +70,4 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
-/bin/
+*/bin/
