@@ -14,6 +14,7 @@ typedef struct
 {
 		std::string strLogPath;
 		std::string strServerPort;
+		std::string strMAC;
 } CONFIG;
 
 class CSocketServer;

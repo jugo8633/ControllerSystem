@@ -1,7 +1,7 @@
 export MODULES=global_inc \
 			 main \
 			 controller \
-			 areaWell	\
+			 areaWellHandler	\
 			 configHandler	\
 			 messageHandler	\
 			 objectHandler	\

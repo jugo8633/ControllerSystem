@@ -5,6 +5,8 @@
  *      Author: Louis Ju
  */
 
+#include "../areaWellHandler/CAreawell.h"
+
 #include <stdio.h>          // for printf() and fprintf()
 #include <sys/socket.h>     // for socket(), bind(), and connect()
 #include <arpa/inet.h>      // for sockaddr_in and inet_ntoa()
@@ -16,7 +18,6 @@
 
 #include <sys/epoll.h>
 
-#include "Areawell.h"
 
 #define BUFSIZE 1024         // Size of receive buffer
 #define PORT_SERVER		9991
@@ -25,18 +26,18 @@
 
 using namespace std;
 
-Areawell::Areawell() :
+CAreawell::CAreawell() :
 		udpsockfd( -1 )
 {
 
 }
 
-Areawell::~Areawell()
+CAreawell::~CAreawell()
 {
 	stopUdpServer();
 }
 
-int Areawell::make_socket_non_blocking(int sfd)
+int CAreawell::make_socket_non_blocking(int sfd)
 {
 	int flags, s;
 
@@ -60,7 +61,7 @@ int Areawell::make_socket_non_blocking(int sfd)
 	return 0;
 }
 
-string Areawell::sendBroadcast(const char *szIP)
+string CAreawell::sendBroadcast(const char *szIP)
 {
 	int sockfd;            // Socket descriptors for server
 	int broadcast = 1;    // Socket Option.
@@ -165,7 +166,7 @@ string Areawell::sendBroadcast(const char *szIP)
 	return strResult;
 }
 
-void Areawell::startUdpServer()
+void CAreawell::startUdpServer()
 {
 	struct sockaddr_in srvaddr;        // UDP Server Address
 
@@ -196,7 +197,7 @@ void Areawell::startUdpServer()
 	printf( "UDP Server Run.\n" );
 }
 
-void Areawell::stopUdpServer()
+void CAreawell::stopUdpServer()
 {
 	if ( 0 < udpsockfd )
 	{
@@ -205,7 +206,7 @@ void Areawell::stopUdpServer()
 	}
 	udpsockfd = -1;
 }
-int Areawell::sendCommand(std::string strIP, std::string strCommand)
+int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 {
 	char buffer[BUFSIZE];
 	struct sockaddr_in dstaddr;
@@ -277,7 +278,7 @@ int Areawell::sendCommand(std::string strIP, std::string strCommand)
 	return nResponse;
 }
 
-int Areawell::setPortState(string strIP, bool bPort1, bool bPort2, bool bPort3, bool bPort4)
+int CAreawell::setPortState(string strIP, bool bPort1, bool bPort2, bool bPort3, bool bPort4)
 {
 	int sockfd = -1;
 	struct sockaddr_in hostAddr;

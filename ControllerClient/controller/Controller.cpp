@@ -55,13 +55,18 @@ int Controller::init(std::string strConf)
 	mConfig.strServerPort = config->getValue( SECTION_SERVER, PORT );
 	_DBG( "[Controller] Server Port:%s", mConfig.strServerPort.c_str() );
 
+	char *szMAC = cmpServer->getMac( "eth0" );
+	mConfig.strMAC = szMAC;
+	free( szMAC );
+	_DBG( "[Controller] MAC Address:%s", mConfig.strMAC.c_str() );
+
 	delete config;
 	return TRUE;
 }
 
 void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	_DBG( "[Controller] Receive Message : event=%d command=%d id=%lu data_len=%d", nEvent, nCommand, nId, nDataLen );
+//	_DBG( "[Controller] Receive Message : event=%d command=%d id=%lu data_len=%d", nEvent, nCommand, nId, nDataLen );
 
 	string strLog;
 
@@ -71,7 +76,7 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 			onCMP( nId, nDataLen, pData );
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
-
+			_DBG( "[Controller] Socket Client FD:%d Close", nId )
 			break;
 		default:
 			strLog = "unknow message command";
@@ -112,10 +117,15 @@ int Controller::startServer()
 
 void Controller::stopServer()
 {
-
+	if ( cmpServer )
+	{
+		cmpServer->stop();
+		delete cmpServer;
+		cmpServer = 0;
+	}
 }
 
 void Controller::onCMP(int nClientFD, int nDataLen, const void *pData)
 {
-
+	_DBG("[Controller] ")
 }

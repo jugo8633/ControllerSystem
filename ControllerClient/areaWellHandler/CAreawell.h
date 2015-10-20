@@ -27,11 +27,11 @@
 #define IP_GATEWAY_SET "set iControl ip gateway" // ext: set iControl ip gatewayc0.a8.00.01
 #define STATE_PORT_GET "get iControl port state"
 
-class Areawell
+class CAreawell
 {
 	public:
-		Areawell();
-		virtual ~Areawell();
+		CAreawell();
+		virtual ~CAreawell();
 
 	public:
 		std::string sendBroadcast(const char *szIP);
