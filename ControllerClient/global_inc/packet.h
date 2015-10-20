@@ -42,21 +42,21 @@
  */
 struct WMP_HEADER
 {
-	int command_length;
-	int command_id;
-	int command_status;
-	int sequence_number;
+		int command_length;
+		int command_id;
+		int command_status;
+		int sequence_number;
 };
 
 struct WMP_BODY
 {
-	char wmpdata[MAX_DATA_LEN];
+		char wmpdata[MAX_DATA_LEN];
 };
 
 struct WMP_PACKET
 {
-	WMP_HEADER wmpHeader;
-	WMP_BODY wmpBody;
+		WMP_HEADER wmpHeader;
+		WMP_BODY wmpBody;
 };
 
 /*
@@ -86,7 +86,6 @@ struct WMP_PACKET
 #define config_request								0x00000011
 #define config_response								0x80000011
 
-
 /*
  * WMP status set
  */
@@ -109,214 +108,214 @@ struct WMP_PACKET
 #define STATUS_RINVCONFIG							0x00000013		//Invalid Configuration Item
 
 /** Define Log Msg **/
-#define MSG_ERROR		"[WMS Error]"
-#define MSG_LOG		"[WMS Log]"
+#define MSG_ERROR		"[Controller Error]"
+#define MSG_LOG			"[Controller Log]"
 
 inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc, const char *szLogPath = 0, int nClienFD = 0)
 {
 
 	char szCmd[48];
 	char szSta[32];
-	memset(szCmd, 0, sizeof(szCmd));
-	memset(szSta, 0, sizeof(szSta));
+	memset( szCmd, 0, sizeof(szCmd) );
+	memset( szSta, 0, sizeof(szSta) );
 
-	switch (nCommand)
+	switch ( nCommand )
 	{
-	case generic_nack:
-		strcpy(szCmd, "generic_nack");
-		break;
-	case bind_request:
-		strcpy(szCmd, "bind_request");
-		break;
-	case bind_response:
-		strcpy(szCmd, "bind_response");
-		break;
-	case authentication_request:
-		strcpy(szCmd, "authentication_request");
-		break;
-	case authentication_response:
-		strcpy(szCmd, "authentication_response");
-		break;
-	case wirless_access_log_request:
-		strcpy(szCmd, "wirless_access_log_request");
-		break;
-	case wirless_access_log_response:
-		strcpy(szCmd, "wirless_access_log_response");
-		break;
-	case authorization_request:
-		strcpy(szCmd, "authorization_request");
-		break;
-	case authorization_response:
-		strcpy(szCmd, "authorization_response");
-		break;
-	case enquire_link_request:
-		strcpy(szCmd, "enquire_link_request");
-		break;
-	case enquire_link_response:
-		strcpy(szCmd, "enquire_link_response");
-		break;
-	case unbind_request:
-		strcpy(szCmd, "unbind_request");
-		break;
-	case unbind_response:
-		strcpy(szCmd, "unbind_response");
-		break;
-	case firmware_update_request:
-		strcpy(szCmd, "firmware_update_request");
-		break;
-	case firmware_update_response:
-		strcpy(szCmd, "firmware_update_response");
-		break;
-	case user_account_update_request:
-		strcpy(szCmd, "user_account_update_request");
-		break;
-	case user_account_update_response:
-		strcpy(szCmd, "user_account_update_response");
-		break;
-	case get_wireless_access_log_request:
-		strcpy(szCmd, "get_wireless_access_log_request");
-		break;
-	case get_wireless_access_log_response:
-		strcpy(szCmd, "get_wireless_access_log_response");
-		break;
-	case client_reboot_request:
-		strcpy(szCmd, "client_reboot_request");
-		break;
-	case client_reboot_response:
-		strcpy(szCmd, "client_reboot_response");
-		break;
+		case generic_nack:
+			strcpy( szCmd, "generic_nack" );
+			break;
+		case bind_request:
+			strcpy( szCmd, "bind_request" );
+			break;
+		case bind_response:
+			strcpy( szCmd, "bind_response" );
+			break;
+		case authentication_request:
+			strcpy( szCmd, "authentication_request" );
+			break;
+		case authentication_response:
+			strcpy( szCmd, "authentication_response" );
+			break;
+		case wirless_access_log_request:
+			strcpy( szCmd, "wirless_access_log_request" );
+			break;
+		case wirless_access_log_response:
+			strcpy( szCmd, "wirless_access_log_response" );
+			break;
+		case authorization_request:
+			strcpy( szCmd, "authorization_request" );
+			break;
+		case authorization_response:
+			strcpy( szCmd, "authorization_response" );
+			break;
+		case enquire_link_request:
+			strcpy( szCmd, "enquire_link_request" );
+			break;
+		case enquire_link_response:
+			strcpy( szCmd, "enquire_link_response" );
+			break;
+		case unbind_request:
+			strcpy( szCmd, "unbind_request" );
+			break;
+		case unbind_response:
+			strcpy( szCmd, "unbind_response" );
+			break;
+		case firmware_update_request:
+			strcpy( szCmd, "firmware_update_request" );
+			break;
+		case firmware_update_response:
+			strcpy( szCmd, "firmware_update_response" );
+			break;
+		case user_account_update_request:
+			strcpy( szCmd, "user_account_update_request" );
+			break;
+		case user_account_update_response:
+			strcpy( szCmd, "user_account_update_response" );
+			break;
+		case get_wireless_access_log_request:
+			strcpy( szCmd, "get_wireless_access_log_request" );
+			break;
+		case get_wireless_access_log_response:
+			strcpy( szCmd, "get_wireless_access_log_response" );
+			break;
+		case client_reboot_request:
+			strcpy( szCmd, "client_reboot_request" );
+			break;
+		case client_reboot_response:
+			strcpy( szCmd, "client_reboot_response" );
+			break;
 	}
 
-	switch (nStatus)
+	switch ( nStatus )
 	{
-	case STATUS_ROK:
-		strcpy(szSta, "No Error");
-		break;
-	case STATUS_RINVMSGLEN:
-		strcpy(szSta, "Message Length is invalid");
-		break;
-	case STATUS_RINVCMDLEN:
-		strcpy(szSta, "Command Length is invalid");
-		break;
-	case STATUS_RINVCMDID:
-		strcpy(szSta, "Invalid Command ID");
-		break;
-	case STATUS_RINVBNDSTS:
-		strcpy(szSta, "Incorrect BIND Status for given command");
-		break;
-	case STATUS_RALYBND:
-		strcpy(szSta, "Already in Bound State");
-		break;
-	case STATUS_RSYSERR:
-		strcpy(szSta, "System Error");
-		break;
-	case STATUS_RINVSRCADR:
-		strcpy(szSta, "Invalid Source Address");
-		break;
-	case STATUS_RINVDSTADR:
-		strcpy(szSta, "Invalid Destination Address");
-		break;
-	case STATUS_RINVMSGID:
-		strcpy(szSta, "Message ID is invalid");
-		break;
-	case STATUS_RBINDFAIL:
-		strcpy(szSta, "Bind Failed");
-		break;
-	case STATUS_RINVPASWD:
-		strcpy(szSta, "Invalid Password");
-		break;
-	case STATUS_RINVDEVICEMAC:
-		strcpy(szSta, "Invalid Device MAC");
-		break;
-	case STATUS_RINVBODY:
-		strcpy(szSta, "Invalid Packet Body Data");
-		break;
-	case STATUS_RINVCLIENTMAC:
-		strcpy(szSta, "Invalid Client MAC");
-		break;
-	case STATUS_RINVURL:
-		strcpy(szSta, "Invalid URL");
-		break;
-	default:
-		strcpy(szSta, "No Error");
-		break;
+		case STATUS_ROK:
+			strcpy( szSta, "No Error" );
+			break;
+		case STATUS_RINVMSGLEN:
+			strcpy( szSta, "Message Length is invalid" );
+			break;
+		case STATUS_RINVCMDLEN:
+			strcpy( szSta, "Command Length is invalid" );
+			break;
+		case STATUS_RINVCMDID:
+			strcpy( szSta, "Invalid Command ID" );
+			break;
+		case STATUS_RINVBNDSTS:
+			strcpy( szSta, "Incorrect BIND Status for given command" );
+			break;
+		case STATUS_RALYBND:
+			strcpy( szSta, "Already in Bound State" );
+			break;
+		case STATUS_RSYSERR:
+			strcpy( szSta, "System Error" );
+			break;
+		case STATUS_RINVSRCADR:
+			strcpy( szSta, "Invalid Source Address" );
+			break;
+		case STATUS_RINVDSTADR:
+			strcpy( szSta, "Invalid Destination Address" );
+			break;
+		case STATUS_RINVMSGID:
+			strcpy( szSta, "Message ID is invalid" );
+			break;
+		case STATUS_RBINDFAIL:
+			strcpy( szSta, "Bind Failed" );
+			break;
+		case STATUS_RINVPASWD:
+			strcpy( szSta, "Invalid Password" );
+			break;
+		case STATUS_RINVDEVICEMAC:
+			strcpy( szSta, "Invalid Device MAC" );
+			break;
+		case STATUS_RINVBODY:
+			strcpy( szSta, "Invalid Packet Body Data" );
+			break;
+		case STATUS_RINVCLIENTMAC:
+			strcpy( szSta, "Invalid Client MAC" );
+			break;
+		case STATUS_RINVURL:
+			strcpy( szSta, "Invalid URL" );
+			break;
+		default:
+			strcpy( szSta, "No Error" );
+			break;
 	}
 
-	std::time_t t = std::time(NULL);
+	std::time_t t = std::time( NULL );
 	char mbstr[100];
-	std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
+	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
 
 	char szLog[255];
-	sprintf(szLog, "%s-%s WMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", mbstr, szDesc, szCmd, szSta, nSequence, nLength, nClienFD);
+	sprintf( szLog, "%s-%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", mbstr, szDesc, szCmd, szSta, nSequence, nLength, nClienFD );
 
 #ifdef DEBUG
 	printf("[DEBUG] %s\n" ,szLog);
 #else
-	syslog(LOG_DEBUG, "[DEBUG] %s\n", szLog);
+	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
 #endif
 
-	if (0 != szLogPath)
+	if ( 0 != szLogPath )
 	{
 		FILE *pstream;
-		memset(mbstr, 0, 100);
-		std::strftime(mbstr, 100, "%Y-%m-%d", std::localtime(&t));
+		memset( mbstr, 0, 100 );
+		std::strftime( mbstr, 100, "%Y-%m-%d", std::localtime( &t ) );
 		char szPath[255];
-		memset(szPath, 0, 255);
-		sprintf(szPath, "%s.%s", szLogPath, mbstr);
-		pstream = fopen(szPath, "a");
-		if (NULL != pstream)
+		memset( szPath, 0, 255 );
+		sprintf( szPath, "%s.%s", szLogPath, mbstr );
+		pstream = fopen( szPath, "a" );
+		if ( NULL != pstream )
 		{
-			fprintf(pstream, "%s\n", szLog);
-			fflush(pstream);
-			fclose(pstream);
-			system("sync;sync;sync");
+			fprintf( pstream, "%s\n", szLog );
+			fflush( pstream );
+			fclose( pstream );
+			system( "sync;sync;sync" );
 		}
 		else
 		{
-			printf("[Error] Log file path open fail!!\n");
+			printf( "[Error] Log file path open fail!!\n" );
 		}
 	}
 }
 
 inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPath = 0)
 {
-	std::time_t t = std::time(NULL);
+	std::time_t t = std::time( NULL );
 	char mbstr[100];
-	std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
+	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
 
 	char szLog[MAX_DATA_LEN];
-	sprintf(szLog, "%s-%s WMP : %-20s", mbstr, szDesc, szMsg);
+	sprintf( szLog, "%s-%s WMP : %-20s", mbstr, szDesc, szMsg );
 #ifdef DEBUG
 	printf("[DEBUG] %s\n" ,szLog);
 #else
-	syslog(LOG_DEBUG, "[DEBUG] %s\n", szLog);
+	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
 #endif
 
-	if (0 != szLogPath)
+	if ( 0 != szLogPath )
 	{
 		FILE *pstream;
-		memset(mbstr, 0, 100);
-		std::strftime(mbstr, 100, "%Y-%m-%d", std::localtime(&t));
+		memset( mbstr, 0, 100 );
+		std::strftime( mbstr, 100, "%Y-%m-%d", std::localtime( &t ) );
 		char szPath[255];
-		memset(szPath, 0, 255);
-		sprintf(szPath, "%s.%s", szLogPath, mbstr);
-		pstream = fopen(szPath, "a");
-		if (NULL != pstream)
+		memset( szPath, 0, 255 );
+		sprintf( szPath, "%s.%s", szLogPath, mbstr );
+		pstream = fopen( szPath, "a" );
+		if ( NULL != pstream )
 		{
-			fprintf(pstream, "%s\n", szLog);
-			fflush(pstream);
-			fclose(pstream);
-			system("sync;sync;sync");
+			fprintf( pstream, "%s\n", szLog );
+			fflush( pstream );
+			fclose( pstream );
+			system( "sync;sync;sync" );
 		}
 		else
 		{
-			printf("[Error] Log file path open fail!!\n");
+			printf( "[Error] Log file path open fail!!\n" );
 		}
 	}
 }
 
 inline void printLog(string strMsg, string strDesc, string strLogPath = 0)
 {
-	printLog(strMsg.c_str(), strDesc.c_str(), strLogPath.c_str());
+	printLog( strMsg.c_str(), strDesc.c_str(), strLogPath.c_str() );
 }
 

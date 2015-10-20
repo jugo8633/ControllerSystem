@@ -150,14 +150,15 @@ void runService(int argc, char* argv[])
 
 	Controller *controller = Controller::getInstance();
 
-	if ( controller->init( "controller.conf" ) )
+	if ( controller->init( "controller.conf" ) && -1 != controller->initMessage( MSG_ID ) )
 	{
-		/*		if ( -1 != wmsServer->initMessage( MSG_ID ) )
-		 {
-		 wmsServer->startServer();
-		 wmsServer->run( EVENT_FILTER_WIRELESS_MANAGER );
-		 wmsServer->stopServer();
-		 }*/
+		if ( controller->startServer() )
+		{
+			_DBG( "<============= Service Start Run =============>" )
+			controller->run( EVENT_FILTER_CONTROLLER );
+			_DBG( "<============= Service Stop Run =============>" )
+			controller->stopServer();
+		}
 	}
 	_DBG( "[Process] child process exit" );
 }

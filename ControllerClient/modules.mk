@@ -3,7 +3,11 @@ export MODULES=global_inc \
 			 controller \
 			 areaWell	\
 			 configHandler	\
-			 messageHandler
+			 messageHandler	\
+			 objectHandler	\
+			 socketHandler	\
+			 threadHandler	\
+			 dataHandler
 			
 			 
 export EXT_MODULES=
