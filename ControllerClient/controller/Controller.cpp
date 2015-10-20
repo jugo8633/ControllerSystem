@@ -11,20 +11,21 @@
 #include "CSocketServer.h"
 #include "event.h"
 #include "packet.h"
+#include "CAreawell.h"
 
 using namespace std;
 
 static Controller * controller = 0;
 
 Controller::Controller() :
-		CObject(), cmpServer( new CSocketServer )
+		CObject(), cmpServer( new CSocketServer ), areawell( CAreawell::getInstance() )
 {
 
 }
 
 Controller::~Controller()
 {
-
+	delete areawell;
 }
 
 Controller* Controller::getInstance()
@@ -61,6 +62,7 @@ int Controller::init(std::string strConf)
 	_DBG( "[Controller] MAC Address:%s", mConfig.strMAC.c_str() );
 
 	delete config;
+
 	return TRUE;
 }
 
@@ -76,7 +78,7 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 			onCMP( nId, nDataLen, pData );
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
-			_DBG( "[Controller] Socket Client FD:%d Close", nId )
+			_DBG( "[Controller] Socket Client FD:%d Close", (int )nId )
 			break;
 		default:
 			strLog = "unknow message command";
@@ -127,5 +129,5 @@ void Controller::stopServer()
 
 void Controller::onCMP(int nClientFD, int nDataLen, const void *pData)
 {
-	_DBG("[Controller] ")
+	_DBG( "[Controller] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen )
 }

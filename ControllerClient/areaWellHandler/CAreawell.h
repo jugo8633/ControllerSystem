@@ -3,6 +3,8 @@
  *
  *  Created on: 2015年10月12日
  *      Author: Louis Ju
+ *      This module control AW-2401 smart power line.
+ *      send UDP command and HTTP to handle AW-2401
  */
 
 #pragma once
@@ -30,7 +32,7 @@
 class CAreawell
 {
 	public:
-		CAreawell();
+		static CAreawell* getInstance();
 		virtual ~CAreawell();
 
 	public:
@@ -41,6 +43,7 @@ class CAreawell
 		void stopUdpServer();
 
 	private:
+		explicit CAreawell();
 		int make_socket_non_blocking(int sfd);
 
 	private:

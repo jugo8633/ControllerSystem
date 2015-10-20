@@ -569,7 +569,7 @@ int CSocket::getSocketStyle() const
 	return m_nSocketStyle;
 }
 
-char *CSocket::getMac(char *iface)
+char *CSocket::getMac(const char *iface)
 {
 	char *ret = (char*) malloc( 13 );
 	struct ifreq s;

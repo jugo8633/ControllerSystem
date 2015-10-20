@@ -18,13 +18,14 @@
 
 #include <sys/epoll.h>
 
-
 #define BUFSIZE 1024         // Size of receive buffer
 #define PORT_SERVER		9991
 #define PORT_SERVER_BROADCAST	9992
 #define PORT_CLIENT		9999
 
 using namespace std;
+
+static CAreawell *areawell_instance = 0;
 
 CAreawell::CAreawell() :
 		udpsockfd( -1 )
@@ -35,6 +36,15 @@ CAreawell::CAreawell() :
 CAreawell::~CAreawell()
 {
 	stopUdpServer();
+}
+
+CAreawell* CAreawell::getInstance()
+{
+	if ( 0 == areawell_instance )
+	{
+		areawell_instance = new CAreawell();
+	}
+	return areawell_instance;
 }
 
 int CAreawell::make_socket_non_blocking(int sfd)

@@ -60,7 +60,7 @@ class CSocket
 		void socketClose(int nSocketFD);
 		int getSocketStyle() const;
 		bool checkSocketFD(int nSocketFD);
-		char *getMac(char *iface);
+		char *getMac(const char *iface);
 		int getIfAddress();
 
 	private:

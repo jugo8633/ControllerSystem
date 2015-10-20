@@ -18,6 +18,7 @@ typedef struct
 } CONFIG;
 
 class CSocketServer;
+class CAreawell;
 
 class Controller: public CObject
 {
@@ -37,5 +38,6 @@ class Controller: public CObject
 
 	private:
 		CONFIG mConfig;
-		CSocketServer* cmpServer; // controller message protocol server
+		CSocketServer *cmpServer; // controller message protocol server
+		CAreawell *areawell;
 };
