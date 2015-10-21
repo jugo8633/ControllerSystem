@@ -402,7 +402,6 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 			break;
 		default:
 			_DBG( "[Socket Server] unknow message command" )
-			;
 			break;
 	}
 }

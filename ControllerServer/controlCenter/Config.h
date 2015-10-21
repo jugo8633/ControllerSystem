@@ -9,21 +9,12 @@
 
 #include <string>
 #include <map>
+#include <list>
 
-#define SECTION_SERVER "SERVER"
-#define PORT "port"
-#define SECTION_LOG "LOG"
-#define LOG "log"
-
-typedef std::map<std::string, std::string> confValues;
-
-typedef struct
-{
-		confValues serverConf;
-		confValues logConf;
-} CONF_DATA;
-
-static CONF_DATA confData;
+typedef std::map<std::string, std::string> MAP_CONF_VALUE;
+typedef std::list<MAP_CONF_VALUE> LIST_CONF_MAP;
+typedef std::map<std::string, LIST_CONF_MAP> MAP_CONF;		// <section,list<name,value>>
+static MAP_CONF mapConf;
 
 class Config
 {
@@ -31,7 +22,7 @@ class Config
 		explicit Config();
 		virtual ~Config();
 		int loadConfig(std::string strConf);
-		void setConfig(const char *szSection, const char * szName, const char * szValue);
+		void setConfig(std::string strSection, std::string strName, std::string strValue);
 		std::string getValue(std::string strSection, std::string strName);
 
 	private:

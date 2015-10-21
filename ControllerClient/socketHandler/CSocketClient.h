@@ -1,7 +1,7 @@
 /*
  * CSocketClient.h
  *
- *  Created on: Sep 6, 2012
+ *  Created on: 2015年10月21日
  *      Author: jugo
  */
 
@@ -11,11 +11,10 @@
 
 class CSocketClient: public CSocket
 {
-public:
-	CSocketClient();
-	virtual ~CSocketClient();
-	int start(int nSocketType, const char* cszAddr, short nPort, int nStyle =
-			SOCK_STREAM);
-	void stop();
+	public:
+		CSocketClient();
+		virtual ~CSocketClient();
+		int start(int nSocketType, const char* cszAddr, short nPort, int nStyle = SOCK_STREAM);
+		void stop();
 };
 

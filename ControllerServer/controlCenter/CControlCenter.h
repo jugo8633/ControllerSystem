@@ -13,7 +13,7 @@
 typedef struct
 {
 		std::string strLogPath;
-		std::string strServerPort;
+		std::string strSPSServerPort;
 		std::string strMAC;
 } CONFIG;
 

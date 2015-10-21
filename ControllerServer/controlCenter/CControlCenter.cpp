@@ -48,17 +48,27 @@ int CControlCenter::init(std::string strConf)
 		return FALSE;
 	}
 
-	mConfig.strLogPath = config->getValue( SECTION_LOG, LOG );
-	_DBG( "[Controller] Log Path:%s", mConfig.strLogPath.c_str() );
+	mConfig.strLogPath = config->getValue( "LOG", "log" );
+	if ( mConfig.strLogPath.empty() )
+	{
+		mConfig.strLogPath = "controller.log";		//  use local path to save log
+		_DBG( "[Center] Not set log path, use default." )
+	}
+	_DBG( "[Center] Log Path:%s", mConfig.strLogPath.c_str() );
 
 	/** Get Server Port **/
-	mConfig.strServerPort = config->getValue( SECTION_SERVER, PORT );
-	_DBG( "[Controller] Server Port:%s", mConfig.strServerPort.c_str() );
+	mConfig.strSPSServerPort = config->getValue( "SPS", "port" );
+	if ( mConfig.strSPSServerPort.empty() )
+	{
+		mConfig.strSPSServerPort = "6607";
+		_DBG( "[Center] Not set server port, use default." )
+	}
+	_DBG( "[Center] Server Port:%s", mConfig.strSPSServerPort.c_str() );
 
 	char *szMAC = cmpServer->getMac( "eth0" );
 	mConfig.strMAC = szMAC;
 	free( szMAC );
-	_DBG( "[Controller] MAC Address:%s", mConfig.strMAC.c_str() );
+	_DBG( "[Center] MAC Address:%s", mConfig.strMAC.c_str() );
 
 	delete config;
 
@@ -77,11 +87,11 @@ void CControlCenter::onReceiveMessage(int nEvent, int nCommand, unsigned long in
 			onCMP( nId, nDataLen, pData );
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
-			_DBG( "[Controller] Socket Client FD:%d Close", (int ) nId )
+			_DBG( "[Center] Socket Client FD:%d Close", (int ) nId )
 			break;
 		default:
 			strLog = "unknow message command";
-			printLog( strLog, "[Controller]", mConfig.strLogPath );
+			printLog( strLog, "[Center]", mConfig.strLogPath );
 			break;
 	}
 }
@@ -92,12 +102,12 @@ int CControlCenter::startServer()
 	cmpServer->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROL_CENTER, EVENT_COMMAND_SOCKET_CONTROL_CENTER_RECEIVE );
 	cmpServer->setClientDisconnectCommand( EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT );
 
-	if ( !mConfig.strServerPort.empty() )
+	if ( !mConfig.strSPSServerPort.empty() )
 	{
-		int nPort = atoi( mConfig.strServerPort.c_str() );
+		int nPort = atoi( mConfig.strSPSServerPort.c_str() );
 		if ( 0 >= nPort )
 		{
-			_DBG( "CMP Server Start Fail, Invalid Port:%s", mConfig.strServerPort.c_str() )
+			_DBG( "CMP Server Start Fail, Invalid Port:%s", mConfig.strSPSServerPort.c_str() )
 			return FALSE;
 		}
 		/** Start TCP/IP socket listen **/
@@ -128,5 +138,5 @@ void CControlCenter::stopServer()
 
 void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 {
-	_DBG( "[Controller] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen )
+	_DBG( "[Center] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen )
 }

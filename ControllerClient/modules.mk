@@ -7,7 +7,8 @@ export MODULES=global_inc \
 			 objectHandler	\
 			 socketHandler	\
 			 threadHandler	\
-			 dataHandler
+			 dataHandler	\
+			 cmpHandler
 			
 			 
 export EXT_MODULES=

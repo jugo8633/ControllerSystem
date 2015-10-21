@@ -12,6 +12,8 @@
 #include <sys/ioctl.h>
 #include <linux/if_link.h>
 #include <ifaddrs.h>
+#include <fcntl.h>
+#include <sys/epoll.h>
 #include "CSocket.h"
 
 #define FLAGS	MSG_NOSIGNAL // send & recv flag
@@ -409,6 +411,54 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 	return nResult;
 }
 
+int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, int nTimeout)
+{
+	int nResult = 0;
+	socklen_t slen;
+	struct epoll_event ev;
+	struct epoll_event events[5];
+	int noEvents;
+	int epfd;
+
+	int nSocketStyle = getSocketStyle();
+	if ( SOCK_STREAM == getSocketStyle() )
+	{
+		// Create epoll file descriptor.
+		epfd = epoll_create( 5 );
+		// Add socket into the EPOLL set.
+		ev.data.fd = nSockFD;
+		ev.events = EPOLLIN | EPOLLET;
+		epoll_ctl( epfd, EPOLL_CTL_ADD, nSockFD, &ev );
+
+		for ( int i = 0 ; i < 3 ; ++i )
+		{
+			noEvents = epoll_wait( epfd, events, 5, nTimeout );
+			for ( int j = 0 ; j < noEvents ; ++j )
+			{
+				if ( (events[j].events & EPOLLIN) && nSockFD == events[j].data.fd )
+				{
+					nResult = recv( nSockFD, *pBuf, nSize, FLAGS );
+					close( epfd );
+					_DBG( "[Socket] socket recv: %d", nResult )
+					return nResult;
+				}
+			}
+		}
+
+		if ( -1 == nResult )
+		{
+			setLastError( ERROR_RECEIVE_FAIL );
+		}
+		close( epfd );
+	}
+	else
+	{
+		_DBG( "[Socket] Socket Receive Fail, Invalid Socket Style." )
+	}
+
+	return nResult;
+}
+
 bool CSocket::checkSocketFD(int nSocketFD)
 {
 	int nRet = 0;
@@ -424,7 +474,7 @@ bool CSocket::checkSocketFD(int nSocketFD)
 	{
 		bValid = FD_ISSET( nSocketFD, &socketSet );
 	}
-	_DBG( "[Socket] select socket FD :%d", bValid );
+	_DBG( "[Socket] select socket FD :%d Valid:%d", nSocketFD, bValid );
 	return bValid;
 }
 
@@ -645,4 +695,28 @@ int CSocket::getIfAddress()
 
 	freeifaddrs( ifaddr );
 	return n;
+}
+
+int CSocket::make_socket_non_blocking(int nSocketFD)
+{
+	int flags, s;
+
+	flags = fcntl( nSocketFD, F_GETFL, 0 );
+
+	if ( flags == -1 )
+	{
+		perror( "fcntl" );
+		return -1;
+	}
+
+	flags |= O_NONBLOCK;
+	s = fcntl( nSocketFD, F_SETFL, flags );
+
+	if ( s == -1 )
+	{
+		perror( "fcntl" );
+		return -1;
+	}
+
+	return 0;
 }

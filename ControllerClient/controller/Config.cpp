@@ -1,12 +1,12 @@
 /*
  * Config.cpp
  *
- *  Created on: 2015年10月19日
+ *  Created on: 2015年10月20日
  *      Author: Louis Ju
  */
 
-#include <string>
 #include "Config.h"
+#include <string>
 #include "common.h"
 #include "CConfigHandler.h"
 
@@ -19,7 +19,7 @@ Config::Config()
 
 Config::~Config()
 {
-
+	mapConf.clear();
 }
 
 int Config::loadConfig(std::string strConf)
@@ -53,36 +53,36 @@ int Config::readConfig(std::string strConf)
 	return nRet;
 }
 
-void Config::setConfig(const char *szSection, const char * szName, const char * szValue)
+void Config::setConfig(string strSection, string strName, string strValue)
 {
-	if ( isValidStr( szSection, 255 ) && isValidStr( szName, 255 ) && isValidStr( szValue, 2048 ) )
-	{
-		if ( 0 == strcmp( SECTION_SERVER, szSection ) )
-		{
-			confData.serverConf[szName] = szValue;
-		}
+	MAP_CONF_VALUE mapData;
+	mapData.insert( std::make_pair( strName, strValue ) );
 
-		if ( 0 == strcmp( SECTION_LOG, szSection ) )
-		{
-			confData.logConf[szName] = szValue;
-		}
-		_DBG( "[Config] Set config section=%s name=%s value=%s", szSection, szName, szValue );
+	if ( mapConf.find( strSection ) != mapConf.end() )
+	{
+		mapConf[strSection].push_back( mapData );
+	}
+	else
+	{
+		LIST_CONF_MAP listConf;
+		listConf.push_back( mapData );
+		mapConf.insert( std::make_pair( strSection, listConf ) );
 	}
 }
 
 std::string Config::getValue(std::string strSection, std::string strName)
 {
 	string strValue;
-	if ( isValidStr( strSection.c_str(), 255 ) && isValidStr( strName.c_str(), 255 ) )
-	{
-		if ( 0 == strcmp( SECTION_SERVER, strSection.c_str() ) )
-		{
-			strValue = confData.serverConf[strName];
-		}
 
-		if ( 0 == strcmp( SECTION_LOG, strSection.c_str() ) )
+	if ( mapConf.find( strSection ) != mapConf.end() )
+	{
+		for ( LIST_CONF_MAP::iterator i = mapConf[strSection].begin() ; i != mapConf[strSection].end() ; ++i )
 		{
-			strValue = confData.logConf[strName];
+			if ( (*i).find( strName ) != (*i).end() )
+			{
+				strValue = (*i)[strName];
+				break;
+			}
 		}
 	}
 	return strValue;

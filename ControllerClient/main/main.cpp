@@ -154,6 +154,7 @@ void runService(int argc, char* argv[])
 	{
 		if ( controller->startServer() )
 		{
+			controller->connectCenter();
 			_DBG( "<============= Service Start Run =============>" )
 			controller->run( EVENT_FILTER_CONTROLLER );
 			_DBG( "<============= Service Stop Run =============>" )
