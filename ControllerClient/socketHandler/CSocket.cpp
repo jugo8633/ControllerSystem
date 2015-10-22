@@ -1,8 +1,8 @@
 /*
  * CSocket.cpp
  *
- *  Created on: Sep 7, 2012
- *      Author: root
+ *  Created on: 2015年10月19日
+ *      Author: Louis Ju
  */
 
 #include <errno.h>
@@ -20,14 +20,12 @@
 CSocket::CSocket() :
 		m_nSocketType( AF_INET ), m_nSocketFD( -1 ), m_nPort( -1 ), m_nLastError( 0 ), m_nSocketStyle( SOCK_STREAM )
 {
-	// TODO Auto-generated constructor stub
 	memset( szPath, 0, sizeof(szPath) );
 	memset( szIP, 0, sizeof(szIP) );
 }
 
 CSocket::~CSocket()
 {
-	// TODO Auto-generated destructor stub
 	socketClose();
 }
 

@@ -14,6 +14,7 @@
 #include <ctime>
 #include <iostream>
 
+using namespace std;
 /*
  * CMP body data length
  */

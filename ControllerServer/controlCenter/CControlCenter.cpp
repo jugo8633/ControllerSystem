@@ -11,20 +11,21 @@
 #include "event.h"
 #include "packet.h"
 #include "CControlCenter.h"
+#include "utility.h"
 
 using namespace std;
 
 static CControlCenter * controlcenter = 0;
 
 CControlCenter::CControlCenter() :
-		CObject(), cmpServer( new CSocketServer )
+		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler )
 {
 
 }
 
 CControlCenter::~CControlCenter()
 {
-
+	delete cmpParser;
 }
 
 CControlCenter* CControlCenter::getInstance()
@@ -136,7 +137,47 @@ void CControlCenter::stopServer()
 	}
 }
 
+int CControlCenter::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)
+{
+	int nRet = -1;
+	int nCommandSend;
+	CMP_HEADER cmpHeader;
+	void *pHeader = &cmpHeader;
+
+	memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+	nCommandSend = nCommand;
+
+	if ( isResp )
+	{
+		nCommandSend = generic_nack | nCommand;
+	}
+
+	cmpParser->formatHeader( nCommandSend, nStatus, nSequence, &pHeader );
+	nRet = cmpServer->socketSend( nSocket, &cmpHeader, sizeof(CMP_HEADER) );
+	printPacket( nCommandSend, nStatus, nSequence, nRet, "[Center Send]", mConfig.strLogPath.c_str(), nSocket );
+	return nRet;
+}
+
 void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 {
 	_DBG( "[Center] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen )
+
+	int nRet = -1;
+	int nPacketLen = 0;
+	CMP_HEADER cmpHeader;
+	char *pPacket;
+	string strLog;
+
+	if ( (int) sizeof(CMP_HEADER) > nDataLen )
+	{
+		strLog = "Error: Invalid CMP, length:" + ConvertToString( nDataLen ) + " data:" + ConvertToString( (char*) pData );
+		printLog( strLog, "[Control Center Recv]", mConfig.strLogPath );
+		sendCommand( nClientFD, generic_nack, STATUS_RINVMSGLEN, 0, true );
+		return;
+	}
+
+	pPacket = (char*) const_cast<void*>( pData );
+	memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+
+
 }

@@ -18,6 +18,7 @@ typedef struct
 } CONFIG;
 
 class CSocketServer;
+class CCmpHandler;
 
 class CControlCenter: public CObject
 {
@@ -34,9 +35,11 @@ class CControlCenter: public CObject
 	private:
 		explicit CControlCenter();
 		void onCMP(int nClientFD, int nDataLen, const void *pData);
+		int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
 
 	private:
 		CONFIG mConfig;
 		CSocketServer *cmpServer; // controller message protocol server
+		CCmpHandler *cmpParser;
 
 };

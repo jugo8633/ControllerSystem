@@ -28,14 +28,12 @@ int CSocketServer::m_nInternalEventFilter = 7000;
 CSocketServer::CSocketServer() :
 		CSocket(), m_nClientFD( -1 ), threadHandler( new CThreadHandler ), udpClientData( 0 )
 {
-	// TODO Auto-generated constructor stub
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
 }
 
 CSocketServer::~CSocketServer()
 {
-	// TODO Auto-generated destructor stub
 	delete threadHandler;
 	if ( udpClientData )
 	{
@@ -368,6 +366,7 @@ void CSocketServer::runMessageReceive()
 {
 	run( m_nInternalFilter );
 	threadHandler->threadExit();
+	threadHandler->threadJoin( threadHandler->getThreadID() );
 }
 
 void CSocketServer::setPackageReceiver(int nMsgId, int nEventFilter, int nCommand)

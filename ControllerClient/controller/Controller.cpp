@@ -78,6 +78,9 @@ int Controller::init(std::string strConf)
 
 	delete config;
 
+	cmpClient->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CENTER_RESPONSE );
+	cmpClient->setClientDisconnectCommand( EVENT_COMMAND_CONTROL_CENTER_DISCONNECT );
+
 	return TRUE;
 }
 
@@ -94,6 +97,12 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
 			_DBG( "[Controller] Socket Client FD:%d Close", (int )nId )
+			break;
+		case EVENT_COMMAND_CONTROL_CENTER_DISCONNECT:
+			_DBG( "[Controller] Control Center Dissconnect, Socket FD:%d Close", (int )nId )
+			break;
+		case EVENT_COMMAND_SOCKET_CENTER_RESPONSE:
+			_DBG( "[Controller] Receive Center Message" )
 			break;
 		default:
 			strLog = "unknow message command";
@@ -160,16 +169,18 @@ int Controller::connectCenter()
 	int nFD = cmpClient->start( AF_INET, mConfig.strCenterServerIP.c_str(), nPort );
 	if ( cmpClient->isValidSocketFD() )
 	{
-		cmpClient->make_socket_non_blocking( nFD );
+//		cmpClient->make_socket_non_blocking( nFD );
 		_DBG( "[Controller] Connect Center Success." )
 		sendCommandtoCenter( bind_request, STATUS_ROK, 0, false );
-		char buf[MAX_DATA_LEN];
-		void *pbuf;
-		pbuf = buf;
-		if ( 0 >= cmpClient->socketrecv( cmpClient->getSocketfd(), 16, &pbuf, 1000 ) )
-		{
-			_DBG( "[Controller] bind response fail." )
-		}
+
+		/*		char buf[MAX_DATA_LEN];
+		 void *pbuf;
+		 pbuf = buf;
+		 if ( 0 >= cmpClient->socketrecv( cmpClient->getSocketfd(), 16, &pbuf, 1000 ) )
+		 {
+		 _DBG( "[Controller] bind response fail." )
+		 }
+		 */
 	}
 	else
 	{

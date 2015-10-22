@@ -6,17 +6,37 @@
  */
 
 #include "CSocketClient.h"
+#include "CThreadHandler.h"
+#include "packet.h"
+
+int CSocketClient::m_nInternalEventFilter = 6000;
+
+void *threadMessageReceive(void *argv)
+{
+	CSocketClient* ss = reinterpret_cast<CSocketClient*>( argv );
+	ss->runMessageReceive();
+	return NULL;
+}
+
+void *threadSocketRecvHandler(void *argv)
+{
+	int nFD;
+	CSocketClient* ss = reinterpret_cast<CSocketClient*>( argv );
+	nFD = ss->getSocketfd();
+	ss->runSMSSocketReceive( nFD );
+	return NULL;
+}
 
 CSocketClient::CSocketClient() :
-		CSocket()
+		CSocket(), threadHandler( new CThreadHandler )
 {
-	// TODO Auto-generated constructor stub
-
+	m_nInternalFilter = ++m_nInternalEventFilter;
+	externalEvent.init();
 }
 
 CSocketClient::~CSocketClient()
 {
-	// TODO Auto-generated destructor stub
+	delete threadHandler;
 }
 
 int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int nStyle)
@@ -45,6 +65,19 @@ int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int 
 			}
 		}
 
+		if ( -1 != externalEvent.m_nMsgId )
+		{
+			if ( -1 == initMessage( externalEvent.m_nMsgId ) )
+			{
+				throwException( "socket client create message id fail" );
+			}
+			else
+			{
+				threadHandler->createThread( threadMessageReceive, this );
+				threadHandler->createThread( threadSocketRecvHandler, this );
+			}
+		}
+
 		_DBG( "[Socket Client] Socket connect success, FD:%d", getSocketfd() );
 		return getSocketfd();
 	}
@@ -55,4 +88,117 @@ int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int 
 void CSocketClient::stop()
 {
 	socketClose();
+}
+
+void CSocketClient::setPackageReceiver(int nMsgId, int nEventFilter, int nCommand)
+{
+	externalEvent.m_nMsgId = nMsgId;
+	externalEvent.m_nEventFilter = nEventFilter;
+	externalEvent.m_nEventRecvCommand = nCommand;
+}
+
+void CSocketClient::setClientDisconnectCommand(int nCommand)
+{
+	externalEvent.m_nEventDisconnect = nCommand;
+}
+
+void CSocketClient::runMessageReceive()
+{
+	run( m_nInternalFilter );
+	threadHandler->threadExit();
+	threadHandler->threadJoin( threadHandler->getThreadID() );
+}
+
+void CSocketClient::runSMSSocketReceive(int nSocketFD)
+{
+	int result = 0;
+	char szTmp[16];
+	int nTotalLen = 0;
+	int nBodyLen = 0;
+
+	CMP_PACKET cmpPacket;
+	void* pHeader = &cmpPacket.cmpHeader;
+	void* pBody = &cmpPacket.cmpBody;
+
+	struct sockaddr_in *clientSockaddr;
+	clientSockaddr = new struct sockaddr_in;
+
+	while ( 1 )
+	{
+		memset( &cmpPacket, 0, sizeof(CMP_PACKET) );
+		result = socketrecv( nSocketFD, sizeof(CMP_HEADER), &pHeader, clientSockaddr );
+
+		if ( sizeof(CMP_HEADER) == result )
+		{
+			nTotalLen = ntohl( cmpPacket.cmpHeader.command_length );
+			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
+
+			if ( 0 < nBodyLen )
+			{
+				result = socketrecv( nSocketFD, nBodyLen, &pBody, 0 );
+				if ( result != nBodyLen )
+				{
+					if ( externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect )
+					{
+						sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0 );
+					}
+					socketClose( nSocketFD );
+					_DBG( "[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD, nBodyLen, result );
+					break;
+				}
+			}
+		}
+		else
+		{
+			if ( externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect )
+			{
+				sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0 );
+			}
+			socketClose( nSocketFD );
+			_DBG( "[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result );
+			break;
+		}
+
+		if ( 0 >= result )
+		{
+			if ( externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect )
+			{
+				sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0 );
+			}
+			socketClose( nSocketFD );
+			_DBG( "[Socket Client] socket client close: %d", nSocketFD );
+			break;
+		}
+
+		if ( externalEvent.isValid() )
+		{
+			//	_DBG("[Socket Server] Send Message : FD=%d len=%d", nFD, result);
+			sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nSocketFD, nTotalLen, &cmpPacket );
+		}
+		else
+		{
+			sendMessage( m_nInternalFilter, EVENT_COMMAND_SOCKET_RECEIVE, nSocketFD, nTotalLen, &cmpPacket );
+		}
+	} // while
+
+	sendMessage( m_nInternalFilter, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL );
+
+	threadHandler->threadSleep( 1 );
+	threadHandler->threadExit();
+}
+
+void CSocketClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+{
+	switch ( nCommand )
+	{
+		case EVENT_COMMAND_THREAD_EXIT:
+			threadHandler->threadJoin( nId );
+			_DBG( "[Socket Client] Thread Join:%d", (int )nId )
+			break;
+		case EVENT_COMMAND_SOCKET_RECEIVE:
+			break;
+		default:
+			_DBG( "[Socket Server] unknow message command" )
+			break;
+	}
 }
