@@ -41,6 +41,7 @@ endef
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
 all: checkdirs package-u lib bin/$(TARGET)
+	@cp $(DIR_APP_ROOT)center.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
 bin/$(TARGET): $(OBJ)

@@ -301,6 +301,7 @@ int CSocket::socketSend(int nSockFD, const void* pBuf, int nBufLen)
 	{
 		case SOCK_STREAM: /*virtual circuit*/
 			nResult = send( nSockFD, pBuf, nBufLen, FLAGS );
+			_DBG( "[Socket] send packet length:%d FD:%d", (int )nResult, nSockFD )
 			break;
 		case SOCK_DGRAM: /*datagram, for UDP client send*/
 			nResult = sendto( nSockFD, pBuf, (unsigned long int) nBufLen, FLAGS, (const sockaddr *) &inAddr, (unsigned int) sizeof(inAddr) );

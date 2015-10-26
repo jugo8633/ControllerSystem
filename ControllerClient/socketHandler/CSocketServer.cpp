@@ -343,6 +343,10 @@ void CSocketServer::runSocketAccept()
 		if ( -1 != nChildSocketFD )
 		{
 			sendMessage( m_nInternalFilter, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL );
+			if ( externalEvent.isValid() && -1 != externalEvent.m_nEventConnect )
+			{
+				sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nChildSocketFD, 0, 0 );
+			}
 		}
 		else
 		{

@@ -143,7 +143,7 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				{
 					memset( temp, 0, sizeof(temp) );
 					strcpy( temp, pBody );
-					rData.setData( DEVICE_ID, temp );
+					rData.setData( "id", temp );
 					nStrLen = strlen( temp );
 					++nStrLen;
 					pBody += nStrLen;

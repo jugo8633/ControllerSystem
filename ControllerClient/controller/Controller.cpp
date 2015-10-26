@@ -20,10 +20,26 @@ using namespace std;
 
 static Controller * controller = 0;
 
+/**
+ *  sequence for request
+ */
+static int msnSequence = 0x00000001;
+static int getSequence()
+{
+	++msnSequence;
+	if ( 0x7FFFFFFF <= msnSequence )
+		msnSequence = 0x00000001;
+	return msnSequence;
+}
+
 Controller::Controller() :
 		CObject(), cmpServer( new CSocketServer ), cmpClient( new CSocketClient ), areawell( CAreawell::getInstance() ), cmpParser( new CCmpHandler )
 {
-
+	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
+	{
+		cmpRequest[i] = &Controller::cmpUnknow;
+	}
+	cmpRequest[bind_request] = &Controller::cmpBind;
 }
 
 Controller::~Controller()
@@ -88,12 +104,14 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 {
 //	_DBG( "[Controller] Receive Message : event=%d command=%d id=%lu data_len=%d", nEvent, nCommand, nId, nDataLen );
 
-	string strLog;
-
 	switch ( nCommand )
 	{
 		case EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE:
 			onCMP( nId, nDataLen, pData );
+			break;
+		case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:
+			_DBG( "[Controller] Socket Client FD:%d Connected", (int )nId )
+			cmpServer->socketSend( nId, "welcome", 7 );
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
 			_DBG( "[Controller] Socket Client FD:%d Close", (int )nId )
@@ -102,11 +120,10 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 			_DBG( "[Controller] Control Center Dissconnect, Socket FD:%d Close", (int )nId )
 			break;
 		case EVENT_COMMAND_SOCKET_CENTER_RESPONSE:
-			_DBG( "[Controller] Receive Center Message" )
+			onCenterCMP( nId, nDataLen, pData );
 			break;
 		default:
-			strLog = "unknow message command";
-			printLog( strLog, "[Controller]", mConfig.strLogPath );
+			printLog( "unknow message command", "[Controller]", mConfig.strLogPath );
 			break;
 	}
 }
@@ -115,6 +132,7 @@ int Controller::startServer()
 {
 	/** Run socket server for CMP **/
 	cmpServer->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE );
+	cmpServer->setClientConnectCommand( EVENT_COMMAND_SOCKET_CLIENT_CONNECT );
 	cmpServer->setClientDisconnectCommand( EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT );
 
 	if ( !mConfig.strServerPort.empty() )
@@ -208,13 +226,138 @@ int Controller::sendCommandtoCenter(int nCommand, int nStatus, int nSequence, bo
 
 		cmpParser->formatHeader( nCommandSend, nStatus, nSequence, &pHeader );
 		nRet = cmpClient->socketSend( cmpClient->getSocketfd(), &cmpHeader, sizeof(CMP_HEADER) );
-		printPacket( nCommandSend, nStatus, nSequence, nRet, "[Controller Send]", mConfig.strLogPath.c_str(), cmpClient->getSocketfd() );
+		printPacket( nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Center]", mConfig.strLogPath.c_str(), cmpClient->getSocketfd() );
 	}
 
 	return nRet;
 }
 
+int Controller::sendCommandtoClient(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)
+{
+	int nRet = -1;
+	int nCommandSend;
+	CMP_HEADER cmpHeader;
+	void *pHeader = &cmpHeader;
+
+	memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+	nCommandSend = nCommand;
+
+	if ( isResp )
+	{
+		nCommandSend = generic_nack | nCommand;
+	}
+
+	cmpParser->formatHeader( nCommandSend, nStatus, nSequence, &pHeader );
+	nRet = cmpServer->socketSend( nSocket, &cmpHeader, sizeof(CMP_HEADER) );
+	printPacket( nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Client]", mConfig.strLogPath.c_str(), nSocket );
+	return nRet;
+}
+
+void Controller::ackPacket(int nClientSocketFD, int nCommand, const void * pData)
+{
+	switch ( nCommand )
+	{
+		case generic_nack:
+			break;
+		case bind_response:
+			break;
+		case authentication_response:
+			break;
+		case access_log_response:
+			break;
+		case enquire_link_response:
+			for ( vector<int>::iterator it = vEnquireLink.begin() ; it != vEnquireLink.end() ; ++it )
+			{
+				if ( nClientSocketFD == *it )
+				{
+					vEnquireLink.erase( it );
+					_DBG( "[Controller] Keep alive Socket FD:%d", nClientSocketFD )
+					break;
+				}
+			}
+			break;
+		case unbind_response:
+			break;
+		case update_response:
+			break;
+		case reboot_response:
+			break;
+		case config_response:
+			break;
+		case power_port_response:
+			break;
+	}
+}
+
+int Controller::cmpUnknow(int nSocket, int nSequence, const void * pData)
+{
+	_DBG( "Unknow command......." )
+	return 0;
+}
+
+int Controller::cmpBind(int nSocket, int nSequence, const void * pData)
+{
+	_DBG( "bind......." )
+	return 0;
+}
+
+/**
+ * 	Receive CMP from Client
+ */
 void Controller::onCMP(int nClientFD, int nDataLen, const void *pData)
 {
 	_DBG( "[Controller] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen )
+
+	int nRet = -1;
+	int nPacketLen = 0;
+	CMP_HEADER cmpHeader;
+	char *pPacket;
+
+	pPacket = (char*) const_cast<void*>( pData );
+	memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+
+	cmpHeader.command_id = cmpParser->getCommand( pPacket );
+	cmpHeader.command_length = cmpParser->getLength( pPacket );
+	cmpHeader.command_status = cmpParser->getStatus( pPacket );
+	cmpHeader.sequence_number = cmpParser->getSequence( pPacket );
+
+	printPacket( cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length, "[Controller Recv]", mConfig.strLogPath.c_str(), nClientFD );
+
+	if ( cmpParser->isAckPacket( cmpHeader.command_id ) )
+	{
+		ackPacket( nClientFD, cmpHeader.command_id, pPacket );
+		return;
+	}
+
+	if ( 0x000000FF < cmpHeader.command_id )
+	{
+		sendCommandtoClient( nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true );
+		return;
+	}
+
+	switch ( cmpHeader.command_id )
+	{
+		case bind_request:
+		case authentication_request:
+		case access_log_request:
+		case enquire_link_request:
+		case unbind_request:
+		case update_request:
+		case reboot_request:
+		case config_request:
+			(this->*this->cmpRequest[cmpHeader.command_id])( nClientFD, cmpHeader.sequence_number, pPacket );
+			break;
+		default:
+			sendCommandtoClient( nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true );
+			return;
+	}
+
+}
+
+/**
+ * 	Receive CMP from Control Center
+ */
+void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
+{
+	_DBG( "[Controller] Receive CMP From Control Center:%d Length:%d", nServerFD, nDataLen )
 }
