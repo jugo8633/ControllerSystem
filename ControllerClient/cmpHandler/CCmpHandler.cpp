@@ -139,7 +139,7 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 		switch ( nCommand )
 		{
 			case bind_request:
-				while ( isValidStr( (const char*) pBody, MAX_SIZE ) )
+				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
 				{
 					memset( temp, 0, sizeof(temp) );
 					strcpy( temp, pBody );
@@ -149,22 +149,17 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 					pBody += nStrLen;
 				}
 				break;
-			case authentication_request:
-				while ( isValidStr( (const char*) pBody, MAX_SIZE ) )
+			case power_port_request:
+				memset( temp, 0, sizeof(temp) );
+				memcpy( temp, pBody, 1 );
+				++pBody;
+				rData.setData( "wire", temp );
+				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
 				{
 					memset( temp, 0, sizeof(temp) );
 					strcpy( temp, pBody );
-
-					switch ( nIndex )
-					{
-						case 0: // client_mac
-							rData.setData( "mac", temp );
-							break;
-					}
-					++nIndex;
+					rData.setData( "port", temp );
 					nStrLen = strlen( temp );
-					++nStrLen;
-					pBody += nStrLen;
 				}
 				break;
 		}

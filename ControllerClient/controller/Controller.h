@@ -26,6 +26,7 @@ class CSocketServer;
 class CSocketClient;
 class CAreawell;
 class CCmpHandler;
+class CSqliteHandler;
 
 class Controller: public CObject
 {
@@ -48,8 +49,9 @@ class Controller: public CObject
 		int sendCommandtoCenter(int nCommand, int nStatus, int nSequence, bool isResp);
 		void ackPacket(int nClientSocketFD, int nCommand, const void * pData);
 		int sendCommandtoClient(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
-		int cmpUnknow(int nSocket, int nSequence, const void * pData);
-		int cmpBind(int nSocket, int nSequence, const void * pData);
+		int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
+		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
+		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
 
 	private:
 		CONFIG mConfig;
@@ -57,8 +59,9 @@ class Controller: public CObject
 		CSocketClient *cmpClient;		// controller message protocol client
 		CAreawell *areawell;
 		CCmpHandler *cmpParser;
+		CSqliteHandler *sqlite;
 		std::vector<int> vEnquireLink;
 
-		typedef int (Controller::*MemFn)(int, int, const void *);
+		typedef int (Controller::*MemFn)(int, int, int, const void *);
 		MemFn cmpRequest[MAX_FUNC_POINT];
 };

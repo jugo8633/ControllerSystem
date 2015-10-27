@@ -15,6 +15,8 @@
 #include "CAreawell.h"
 #include "CCmpHandler.h"
 #include "utility.h"
+#include "CDataHandler.cpp"
+#include "CSqliteHandler.h"
 
 using namespace std;
 
@@ -33,13 +35,16 @@ static int getSequence()
 }
 
 Controller::Controller() :
-		CObject(), cmpServer( new CSocketServer ), cmpClient( new CSocketClient ), areawell( CAreawell::getInstance() ), cmpParser( new CCmpHandler )
+		CObject(), cmpServer( new CSocketServer ), cmpClient( new CSocketClient ), areawell( CAreawell::getInstance() ), cmpParser( new CCmpHandler ), sqlite(
+				CSqliteHandler::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
 		cmpRequest[i] = &Controller::cmpUnknow;
 	}
 	cmpRequest[bind_request] = &Controller::cmpBind;
+	cmpRequest[power_port_request] = &Controller::cmpPowerPort;
+
 }
 
 Controller::~Controller()
@@ -48,6 +53,7 @@ Controller::~Controller()
 	cmpClient->stop();
 	delete cmpClient;
 	delete cmpParser;
+	delete sqlite;
 }
 
 Controller* Controller::getInstance()
@@ -93,6 +99,18 @@ int Controller::init(std::string strConf)
 	_DBG( "[Controller] Control Center IP:%s Port:%s", mConfig.strCenterServerIP.c_str(), mConfig.strCenterServerPort.c_str() )
 
 	delete config;
+
+	/** Create sqlite DB device [must]**/
+	string strDeviceDB = config->getValue( "SQLITE", "db_device" );
+	if ( strDeviceDB.empty() )
+	{
+		strDeviceDB = "/data/sqlite/device.db";
+	}
+	mkdirp( strDeviceDB );
+	if ( !sqlite->openDeviceDB( strDeviceDB.c_str() ) )
+	{
+		_DBG( "[Controller] Open Sqlite DB device fail" )
+	}
 
 	cmpClient->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CENTER_RESPONSE );
 	cmpClient->setClientDisconnectCommand( EVENT_COMMAND_CONTROL_CENTER_DISCONNECT );
@@ -189,7 +207,7 @@ int Controller::connectCenter()
 	{
 //		cmpClient->make_socket_non_blocking( nFD );
 		_DBG( "[Controller] Connect Center Success." )
-		sendCommandtoCenter( bind_request, STATUS_ROK, 0, false );
+		sendCommandtoCenter( bind_request, STATUS_ROK, getSequence(), false );
 
 		/*		char buf[MAX_DATA_LEN];
 		 void *pbuf;
@@ -289,15 +307,47 @@ void Controller::ackPacket(int nClientSocketFD, int nCommand, const void * pData
 	}
 }
 
-int Controller::cmpUnknow(int nSocket, int nSequence, const void * pData)
+int Controller::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
 {
-	_DBG( "Unknow command......." )
+	_DBG( "[Controller] Unknow command:%d", nCommand )
+	sendCommandtoClient( nSocket, nCommand, STATUS_RINVCMDID, nSequence, true );
 	return 0;
 }
 
-int Controller::cmpBind(int nSocket, int nSequence, const void * pData)
+int Controller::cmpBind(int nSocket, int nCommand, int nSequence, const void * pData)
 {
-	_DBG( "bind......." )
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet )
+	{
+		_DBG( "[Controller] Bind Get Controller ID:%s Socket FD:%d", rData["id"].c_str(), nSocket )
+		sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
+	}
+	else
+	{
+		_DBG( "[Controller] Bind Fail, Invalid Controller ID Socket FD:%d", nSocket )
+		sendCommandtoClient( nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true );
+	}
+	rData.clear();
+	return 0;
+}
+
+int Controller::cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet )
+	{
+		_DBG( "[Controller] Power Port Setting Wire:%s Port:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), nSocket )
+		sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
+	}
+	else
+	{
+		_DBG( "[Controller] Power Port Setting Fail, Invalid Body Parameters Socket FD:%d", nSocket )
+		sendCommandtoClient( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+	}
+	rData.clear();
+
 	return 0;
 }
 
@@ -335,23 +385,7 @@ void Controller::onCMP(int nClientFD, int nDataLen, const void *pData)
 		return;
 	}
 
-	switch ( cmpHeader.command_id )
-	{
-		case bind_request:
-		case authentication_request:
-		case access_log_request:
-		case enquire_link_request:
-		case unbind_request:
-		case update_request:
-		case reboot_request:
-		case config_request:
-			(this->*this->cmpRequest[cmpHeader.command_id])( nClientFD, cmpHeader.sequence_number, pPacket );
-			break;
-		default:
-			sendCommandtoClient( nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true );
-			return;
-	}
-
+	(this->*this->cmpRequest[cmpHeader.command_id])( nClientFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket );
 }
 
 /**
