@@ -303,6 +303,8 @@ int CWMSClientDlg::formatPacket(int nCommand, void **pPacket, int nSequence)
 	int nport2 = chkPort2.GetCheck();
 	int nport3 = chkPort3.GetCheck();
 	int nport4 = chkPort4.GetCheck();
+	CString strPort;
+	strPort.Format(_T("%d%d%d%d"), nport1, nport2, nport3, nport4);
 
 	int nBody_len = 0;
 	int nTotal_len;
@@ -335,6 +337,15 @@ int CWMSClientDlg::formatPacket(int nCommand, void **pPacket, int nSequence)
 		nBody_len += 1;
 		break;
 	case power_port_request:
+		memcpy(pIndex, (LPCSTR)CT2A(strWire), 1);
+		++pIndex;
+		++nBody_len;
+		memcpy(pIndex, (LPCSTR)CT2A(strPort), 4);
+		pIndex += 4;
+		nBody_len += 4;
+		memcpy(pIndex, "\0", 1);
+		++pIndex;
+		++nBody_len;
 		break;
 	case authentication_request:
 		GetDlgItem(IDC_EDIT_CLIENT_MAC)->GetWindowText(strClientMAC);
@@ -436,6 +447,10 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 				optionEnable(2);
 			}
 			strMsg.Format(_T("[bind_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
+			addStatus(strMsg);
+			break;
+		case power_port_response:
+			strMsg.Format(_T("[power_port_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
 			addStatus(strMsg);
 			break;
 		case authentication_response:
