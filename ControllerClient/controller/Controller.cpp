@@ -17,6 +17,7 @@
 #include "utility.h"
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
+#include <map>
 
 using namespace std;
 
@@ -34,6 +35,8 @@ static int getSequence()
 	return msnSequence;
 }
 
+map<string, string> mapWire;
+
 Controller::Controller() :
 		CObject(), cmpServer( new CSocketServer ), cmpClient( new CSocketClient ), areawell( CAreawell::getInstance() ), cmpParser( new CCmpHandler ), sqlite(
 				CSqliteHandler::getInstance() )
@@ -44,6 +47,10 @@ Controller::Controller() :
 	}
 	cmpRequest[bind_request] = &Controller::cmpBind;
 	cmpRequest[power_port_request] = &Controller::cmpPowerPort;
+	mapWire.insert( std::make_pair( "1", "192.168.0.111" ) );
+	mapWire.insert( std::make_pair( "2", "192.168.0.112" ) );
+	mapWire.insert( std::make_pair( "3", "192.168.0.113" ) );
+	mapWire.insert( std::make_pair( "4", "192.168.0.114" ) );
 
 }
 
@@ -336,10 +343,45 @@ int Controller::cmpPowerPort(int nSocket, int nCommand, int nSequence, const voi
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
-	if ( 0 < nRet )
+	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "port" ) && mapWire.end() != mapWire.find( rData["wire"] ) && 4 <= rData["port"].length() )
 	{
 		_DBG( "[Controller] Power Port Setting Wire:%s Port:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), nSocket )
-		sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		bool bPort1 = true;
+		bool bPort2 = true;
+		bool bPort3 = true;
+		bool bPort4 = true;
+		if ( 0 == rData["port"].substr( 0, 1 ).compare( "0" ) )
+		{
+			bPort1 = false;
+		}
+
+		if ( 0 == rData["port"].substr( 1, 1 ).compare( "0" ) )
+		{
+			bPort2 = false;
+		}
+
+		if ( 0 == rData["port"].substr( 2, 1 ).compare( "0" ) )
+		{
+			bPort3 = false;
+		}
+
+		if ( 0 == rData["port"].substr( 3, 1 ).compare( "0" ) )
+		{
+			bPort4 = false;
+		}
+		_DBG( "[Control] Set Power Port Status: %s %s %s %s", rData["port"].substr( 0, 1 ).c_str(), rData["port"].substr( 1, 1 ).c_str(), rData["port"].substr( 2, 1 ).c_str(),
+				rData["port"].substr( 3, 1 ).c_str() )
+		nRet = areawell->setPortState( mapWire[rData["wire"]], bPort1, bPort2, bPort3, bPort4, 5 );
+		if ( -1 != nRet )
+		{
+			sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
+			_DBG( "[Controller] Power Port Setting Success!!" )
+		}
+		else
+		{
+			sendCommandtoClient( nSocket, nCommand, STATUS_RPPSFAIL, nSequence, true );
+			_DBG( "[Controller] Power Port Setting Fail!!" )
+		}
 	}
 	else
 	{

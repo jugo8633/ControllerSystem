@@ -5,7 +5,7 @@
  *      Author: Louis Ju
  */
 
-#include "../areaWellHandler/CAreawell.h"
+#include "CAreawell.h"
 
 #include <stdio.h>          // for printf() and fprintf()
 #include <sys/socket.h>     // for socket(), bind(), and connect()
@@ -15,7 +15,7 @@
 #include <unistd.h>         // for close()
 #include <fcntl.h>          // for fcntl()
 #include <errno.h>
-
+#include "common.h"
 #include <sys/epoll.h>
 
 #define BUFSIZE 1024         // Size of receive buffer
@@ -55,7 +55,7 @@ int CAreawell::make_socket_non_blocking(int sfd)
 
 	if ( flags == -1 )
 	{
-		perror( "fcntl" );
+		perror( "[Areawell] fcntl" );
 		return -1;
 	}
 
@@ -64,7 +64,7 @@ int CAreawell::make_socket_non_blocking(int sfd)
 
 	if ( s == -1 )
 	{
-		perror( "fcntl" );
+		perror( "[Areawell] fcntl" );
 		return -1;
 	}
 
@@ -88,19 +88,19 @@ string CAreawell::sendBroadcast(const char *szIP)
 	int noEvents;               // EPOLL event number.
 	string strResult;
 
-	printf( "Areawell send broadcast.\n" );
+	printf( "[Areawell] Areawell send broadcast.\n" );
 
 	// Create Socket
 	if ( (sockfd = socket( AF_INET, SOCK_DGRAM, 0 )) == -1 )
 	{
-		perror( "Create Sockfd Fail!!\n" );
+		perror( "[Areawell] Create Sockfd Fail!!\n" );
 		return strResult;
 	}
 
 	// Setup Broadcast Option
 	if ( (setsockopt( sockfd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast) )) == -1 )
 	{
-		perror( "Setsockopt - SO_SOCKET Fail!!\n" );
+		perror( "[Areawell] Setsockopt - SO_SOCKET Fail!!\n" );
 		return strResult;
 	}
 
@@ -118,7 +118,7 @@ string CAreawell::sendBroadcast(const char *szIP)
 
 	if ( bind( sockfd, (struct sockaddr*) &srvaddr, sizeof(srvaddr) ) == -1 )
 	{
-		perror( "bind" );
+		perror( "[Areawell] bind" );
 		return strResult;
 	}
 
@@ -139,7 +139,7 @@ string CAreawell::sendBroadcast(const char *szIP)
 
 	if ( sendto( sockfd, buffer, strlen( buffer ), 0, (struct sockaddr *) &dstaddr, sizeof(dstaddr) ) != -1 )
 	{
-		printf( "Sent a brocast message: %s\n", buffer );
+		printf( "[Areawell] Sent a brocast message: %s\n", buffer );
 		string strRecv;
 		for ( int i = 0 ; i < 3 ; ++i )
 		{
@@ -154,11 +154,11 @@ string CAreawell::sendBroadcast(const char *szIP)
 						//	printf( "Response from %s_%d: %s\n", inet_ntoa( cliaddr.sin_addr ), ntohs( cliaddr.sin_port ), buffer );
 						strRecv.empty();
 						strRecv = buffer;
-						printf( "Receive Data:%s\n", strRecv.c_str() );
+						printf( "[Areawell] Receive Data:%s\n", strRecv.c_str() );
 						if ( string::npos != strRecv.find( "iController" ) )
 						{
 							strResult = inet_ntoa( cliaddr.sin_addr );
-							printf( "AW-2401 IP:%s\n", strResult.c_str() );
+							printf( "[Areawell] AW-2401 IP:%s\n", strResult.c_str() );
 						}
 					}
 				}
@@ -167,7 +167,7 @@ string CAreawell::sendBroadcast(const char *szIP)
 	}
 	else
 	{
-		printf( "Sent a brocast message FAIL!!\n" );
+		printf( "[Areawell] Sent a brocast message FAIL!!\n" );
 	}
 
 	close( sockfd );
@@ -183,7 +183,7 @@ void CAreawell::startUdpServer()
 	// Create Socket
 	if ( (udpsockfd = socket( AF_INET, SOCK_DGRAM, 0 )) == -1 )
 	{
-		perror( "Create Sockfd Fail!!\n" );
+		perror( "[Areawell] Create Sockfd Fail!!\n" );
 		return;
 	}
 
@@ -200,11 +200,11 @@ void CAreawell::startUdpServer()
 	if ( bind( udpsockfd, (struct sockaddr*) &srvaddr, sizeof(srvaddr) ) == -1 )
 	{
 		udpsockfd = -1;
-		perror( "bind" );
+		perror( "[Areawell] bind" );
 		return;
 	}
 
-	printf( "UDP Server Run.\n" );
+	printf( "[Areawell] UDP Server Run.\n" );
 }
 
 void CAreawell::stopUdpServer()
@@ -212,7 +212,7 @@ void CAreawell::stopUdpServer()
 	if ( 0 < udpsockfd )
 	{
 		close( udpsockfd );
-		printf( "UDP Server Stop.\n" );
+		printf( "[Areawell] UDP Server Stop.\n" );
 	}
 	udpsockfd = -1;
 }
@@ -235,7 +235,7 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 
 	if ( -1 == udpsockfd )
 	{
-		printf( "UDP Server Invalid!\n" );
+		printf( "[Areawell] UDP Server Invalid!\n" );
 		return nResponse;
 	}
 
@@ -243,7 +243,7 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 	dstaddr.sin_port = htons( PORT_CLIENT );
 	if ( 1 != inet_pton( AF_INET, strIP.c_str(), &(dstaddr.sin_addr.s_addr) ) )
 	{
-		printf( "Client IP Invalid" );
+		printf( "[Areawell] Client IP Invalid" );
 		return nResponse;
 	}
 
@@ -257,7 +257,7 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 
 	if ( sendto( udpsockfd, strCommand.c_str(), strCommand.length(), 0, (struct sockaddr *) &dstaddr, sizeof(dstaddr) ) != -1 )
 	{
-		printf( "Sent Command: %s\n", strCommand.c_str() );
+		printf( "[Areawell] Sent Command: %s\n", strCommand.c_str() );
 		string strRecv;
 		for ( int i = 0 ; i < 3 ; ++i )
 		{
@@ -271,7 +271,7 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 					{
 						strRecv.empty();
 						strRecv = buffer;
-						printf( "%s Response:%s\n", inet_ntoa( cliaddr.sin_addr ), strRecv.c_str() );
+						printf( "[Areawell] %s Response:%s\n", inet_ntoa( cliaddr.sin_addr ), strRecv.c_str() );
 						break;
 					}
 				}
@@ -280,7 +280,7 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 	}
 	else
 	{
-		printf( "Sent Command FAIL!!\n" );
+		printf( "[Areawell] Sent Command FAIL!!\n" );
 	}
 
 	close( epfd );
@@ -290,20 +290,28 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 
 int CAreawell::setPortState(string strIP, bool bPort1, bool bPort2, bool bPort3, bool bPort4)
 {
+	_DBG( "[Areawell] Connect:%s", strIP.c_str() )
+
+	int status;
 	int sockfd = -1;
 	struct sockaddr_in hostAddr;
-	if ( (sockfd = socket( PF_INET, SOCK_STREAM, IPPROTO_TCP )) < 0 )
+
+	//sockfd = socket( PF_INET, SOCK_STREAM, IPPROTO_TCP )
+
+	hostAddr.sin_port = htons( 80 );
+	if ( (sockfd = socket( PF_INET, SOCK_STREAM, 0 )) < 0 )
 	{
-		printf( "TCP Socket Create Fail!!\n" );
+		printf( "[Areawell] TCP Socket Create Fail!!\n" );
 		return -1;
 	}
 
 	hostAddr.sin_family = AF_INET;
 	hostAddr.sin_addr.s_addr = inet_addr( strIP.c_str() );
 	hostAddr.sin_port = htons( 80 );
+
 	if ( connect( sockfd, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in) ) != 0 )
 	{
-		printf( "TCP Socket Connect Fail!!\n" );
+		printf( "[Areawell] TCP Socket Connect Fail!!\n" );
 		return -1;
 	}
 
@@ -317,10 +325,65 @@ int CAreawell::setPortState(string strIP, bool bPort1, bool bPort2, bool bPort3,
 	strPort += bPort4 ? "on" : "off";
 
 	string strCmd = "GET /set_port_mode.html?" + strPort + " HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nHost: 127.0.0.1\r\nConnection: Keep-Alive\r\n";
-	printf( "send Command:%s", strCmd.c_str() );
+	printf( "[Areawell] send Command:%s", strCmd.c_str() );
 	int nLen = send( sockfd, strCmd.c_str(), strCmd.length(), 0 );
 	close( sockfd );
 
-	return 0;
+	return nLen;
+}
+
+int CAreawell::setPortState(std::string strIP, bool bPort1, bool bPort2, bool bPort3, bool bPort4, int nTimeout)
+{
+	struct sockaddr_in address; /* the libc network address data structure */
+	short int sock = -1; /* file descriptor for the network socket */
+	fd_set fdset;
+	struct timeval tv;
+	int nLen = -1;
+
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = inet_addr( strIP.c_str() ); /* assign the address */
+	address.sin_port = htons( 80 ); /* translate int2port num */
+
+	sock = socket( AF_INET, SOCK_STREAM, 0 );
+	fcntl( sock, F_SETFL, O_NONBLOCK );
+
+	connect( sock, (struct sockaddr *) &address, sizeof(address) );
+
+	FD_ZERO( &fdset );
+	FD_SET( sock, &fdset );
+	tv.tv_sec = nTimeout; /*  second timeout */
+	tv.tv_usec = 0;
+
+	if ( select( sock + 1, NULL, &fdset, NULL, &tv ) == 1 )
+	{
+		int so_error;
+		socklen_t len = sizeof so_error;
+
+		getsockopt( sock, SOL_SOCKET, SO_ERROR, &so_error, &len );
+
+		if ( so_error == 0 )
+		{
+			printf( "[Areawell] Wire: %s:%d is open\n", strIP.c_str(), 80 );
+			string strPort = "portMode1=";
+			strPort += bPort1 ? "on" : "off";
+			strPort += "&portMode2=";
+			strPort += bPort2 ? "on" : "off";
+			strPort += "&portMode3=";
+			strPort += bPort3 ? "on" : "off";
+			strPort += "&portMode4=";
+			strPort += bPort4 ? "on" : "off";
+
+			string strCmd = "GET /set_port_mode.html?" + strPort + " HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nHost: 127.0.0.1\r\nConnection: Keep-Alive\r\n";
+			printf( "[Areawell] send Command:%s", strCmd.c_str() );
+			nLen = send( sock, strCmd.c_str(), strCmd.length(), 0 );
+		}
+		else
+		{
+			printf( "[Areawell] Wire: %s:%d is close\n", strIP.c_str(), 80 );
+		}
+	}
+
+	close( sock );
+	return nLen;
 }
 

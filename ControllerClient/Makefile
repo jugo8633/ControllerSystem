@@ -1,5 +1,5 @@
 #####################################
-# Wireless Manager Server make file
+# Controller make file
 # Created on: Dec 02,2014
 # Author: jugo
 #####################################
@@ -40,7 +40,7 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-all: checkdirs package-u lib bin/$(TARGET)
+all: checkdirs package-u libpng qrencode lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)controller.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
@@ -61,6 +61,9 @@ checkdirs:
 	
 clean:
 	@for libName in ${LIB_NAMES} ; do \
+		$(MAKE) V=99 -C $$libName clean; \
+	done
+	@for libName in ${EXT_MODULES} ; do \
 		$(MAKE) V=99 -C $$libName clean; \
 	done
 	@rm -rf $(DIR_APP_ROOT)build
@@ -94,5 +97,13 @@ package-u:
 	apt-get -y install build-essential
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	
+libpng:
+	@cd $(DIR_APP_ROOT)extLibs/libpng-1.6.18 && ./configure && make && make install;
+	@echo -ne '\n###### libpng Build Done. ######\n'
+	
+qrencode:
+	@cd $(DIR_APP_ROOT)extLibs/qrencode-3.4.4 && ./configure && make && make install;
+	@echo -ne '\n###### qrencode Build Done. ######\n'
+
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

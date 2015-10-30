@@ -39,6 +39,7 @@ class CAreawell
 		std::string sendBroadcast(const char *szIP);
 		int sendCommand(std::string strIP, std::string strCommand);
 		int setPortState(std::string strIP, bool bPort1, bool bPort2, bool bPort3, bool bPort4);
+		int setPortState(std::string strIP, bool bPort1, bool bPort2, bool bPort3, bool bPort4, int nTimeout);
 		void startUdpServer();
 		void stopUdpServer();
 
