@@ -12,7 +12,7 @@ export MODULES=global_inc \
 			 sqliteHandler
 			
 
-export EXT_MODULES=
+#export EXT_MODULES=
 			 
-#export EXT_MODULES=extLibs/libpng-1.6.18 \
+export EXT_MODULES=extLibs/libpng-1.6.18 \
 			 extLibs/qrencode-3.4.4
