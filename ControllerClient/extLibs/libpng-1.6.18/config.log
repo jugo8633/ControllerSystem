@@ -461,7 +461,7 @@ configure:13018: gcc -o conftest -g -O2   conftest.c  >&5
 conftest.c:49:6: warning: conflicting types for built-in function 'pow' [enabled by default]
  char pow ();
       ^
-/tmp/ccHQk8f6.o: In function `main':
+/tmp/cc74b2NF.o: In function `main':
 /git/ControllerSystem/ControllerClient/extLibs/libpng-1.6.18/conftest.c:60: undefined reference to `pow'
 collect2: error: ld returned 1 exit status
 configure:13018: $? = 1

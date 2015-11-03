@@ -43,7 +43,7 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-all: checkdirs package-u libpng qrencode lib bin/$(TARGET)
+all: checkdirs package-u libpng qrencode mongoDB lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)controller.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
@@ -98,6 +98,7 @@ package-u:
 	apt-get -y install sqlite3 libsqlite3-dev
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
+	apt-get -y install libqrencode-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	
 libpng:
@@ -105,9 +106,12 @@ libpng:
 	@echo -ne '\n###### libpng Build Done. ######\n'
 	
 qrencode:
-	@autoreconf -ivf
 	@cd $(DIR_APP_ROOT)extLibs/qrencode-3.4.4 && ./configure && make && make install;
 	@echo -ne '\n###### qrencode Build Done. ######\n'
 
+mongoDB:
+	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons;
+	@mv $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/linux2/normal/libmongoclient.a $(DIR_APP_ROOT)/libs/libmongoclient.a
+	@echo -ne '\n###### MongoDB Build Done. ######\n'
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))
