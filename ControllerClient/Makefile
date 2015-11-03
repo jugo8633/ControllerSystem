@@ -23,13 +23,16 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
+			-L/usr/local/lib \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lmongoclient \
 			-lboost_thread \
 			-lboost_system \
 			-lboost_filesystem \
-			-lsqlite3
+			-lsqlite3 \
+			-lqrencode \
+			-lpng
 			
 vpath %.cpp $(SRC_DIR)
 
@@ -40,7 +43,7 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-all: checkdirs package-u libpng qrencode lib bin/$(TARGET)
+all: checkdirs package-u lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)controller.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
@@ -95,6 +98,8 @@ package-u:
 	apt-get -y install sqlite3 libsqlite3-dev
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
+	apt-get -y install libpng-dev
+	apt-get -y install libqrencode-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	
 libpng:

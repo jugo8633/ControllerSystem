@@ -8,13 +8,15 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "CObject.h"
+
+#define MAX_FUNC_POINT		256
 
 typedef struct
 {
 		std::string strLogPath;
-		std::string strSPSServerPort;
-		std::string strMAC;
+		std::string strServerPort;
 } CONFIG;
 
 class CSocketServer;
@@ -36,10 +38,18 @@ class CControlCenter: public CObject
 		explicit CControlCenter();
 		void onCMP(int nClientFD, int nDataLen, const void *pData);
 		int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
+		void ackPacket(int nClientSocketFD, int nCommand, const void * pData);
+		int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
+		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
+		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
+		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
 
 	private:
 		CONFIG mConfig;
-		CSocketServer *cmpServer; // controller message protocol server
+		CSocketServer *cmpServer;
 		CCmpHandler *cmpParser;
+
+		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);
+		MemFn cmpRequest[MAX_FUNC_POINT];
 
 };

@@ -232,10 +232,16 @@ int CSocketServer::runSMSHandler(int nClientFD)
 	char szTmp[16];
 	int nTotalLen = 0;
 	int nBodyLen = 0;
+	int nCommand = generic_nack;
+	int nSequence = 0;
 
-	CMP_PACKET wmpPacket;
-	void* pHeader = &wmpPacket.cmpHeader;
-	void* pBody = &wmpPacket.cmpBody;
+	CMP_PACKET cmpPacket;
+	void* pHeader = &cmpPacket.cmpHeader;
+	void* pBody = &cmpPacket.cmpBody;
+
+	CMP_HEADER cmpHeader;
+	void *pHeaderResp = &cmpHeader;
+	int nCommandResp;
 
 	/**
 	 * clientSockaddr is used for UDP server send packet to client.
@@ -245,12 +251,26 @@ int CSocketServer::runSMSHandler(int nClientFD)
 
 	while ( 1 )
 	{
-		memset( &wmpPacket, 0, sizeof(wmpPacket) );
+		memset( &cmpPacket, 0, sizeof(cmpPacket) );
 		result = socketrecv( nClientFD, sizeof(CMP_HEADER), &pHeader, clientSockaddr );
 
 		if ( sizeof(CMP_HEADER) == result )
 		{
-			nTotalLen = ntohl( wmpPacket.cmpHeader.command_length );
+			nTotalLen = ntohl( cmpPacket.cmpHeader.command_length );
+			nCommand = ntohl( cmpPacket.cmpHeader.command_id );
+			nSequence = ntohl( cmpPacket.cmpHeader.sequence_number );
+			if ( enquire_link_request == nCommand )
+			{
+				memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+				nCommandResp = generic_nack | nCommand;
+				cmpHeader.command_id = htonl( nCommandResp );
+				cmpHeader.command_status = htonl( STATUS_ROK );
+				cmpHeader.sequence_number = htonl( nSequence );
+				cmpHeader.command_length = htonl( sizeof(CMP_HEADER) );
+				socketSend( nClientFD, &cmpHeader, sizeof(CMP_HEADER) );
+				_DBG( "[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD );
+				continue;
+			}
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
@@ -309,11 +329,11 @@ int CSocketServer::runSMSHandler(int nClientFD)
 		if ( externalEvent.isValid() )
 		{
 			//	_DBG("[Socket Server] Send Message : FD=%d len=%d", nFD, result);
-			sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, nTotalLen, &wmpPacket );
+			sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, nTotalLen, &cmpPacket );
 		}
 		else
 		{
-			sendMessage( m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nFD, nTotalLen, &wmpPacket );
+			sendMessage( m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nFD, nTotalLen, &cmpPacket );
 		}
 	} // while
 

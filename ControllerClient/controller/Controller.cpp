@@ -26,7 +26,7 @@ static Controller * controller = 0;
 /**
  *  sequence for request
  */
-static int msnSequence = 0x00000001;
+static int msnSequence = 0x00000000;
 static int getSequence()
 {
 	++msnSequence;
@@ -46,7 +46,9 @@ Controller::Controller() :
 		cmpRequest[i] = &Controller::cmpUnknow;
 	}
 	cmpRequest[bind_request] = &Controller::cmpBind;
+	cmpRequest[unbind_request] = &Controller::cmpUnbind;
 	cmpRequest[power_port_request] = &Controller::cmpPowerPort;
+
 	mapWire.insert( std::make_pair( "1", "192.168.0.111" ) );
 	mapWire.insert( std::make_pair( "2", "192.168.0.112" ) );
 	mapWire.insert( std::make_pair( "3", "192.168.0.113" ) );
@@ -105,6 +107,11 @@ int Controller::init(std::string strConf)
 	mConfig.strCenterServerPort = config->getValue( "CENTER", "port" );
 	_DBG( "[Controller] Control Center IP:%s Port:%s", mConfig.strCenterServerIP.c_str(), mConfig.strCenterServerPort.c_str() )
 
+	string strQrPath = config->getValue( "SERVER", "qr" );
+	if ( strQrPath.empty() )
+		strQrPath = "/data/qr/mac.png";
+	mkdirp( strQrPath );
+
 	delete config;
 
 	/** Create sqlite DB device [must]**/
@@ -121,6 +128,9 @@ int Controller::init(std::string strConf)
 
 	cmpClient->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CENTER_RESPONSE );
 	cmpClient->setClientDisconnectCommand( EVENT_COMMAND_CONTROL_CENTER_DISCONNECT );
+
+	/** generate MAC QR Code **/
+	qrencode( (const unsigned char *) mConfig.strMAC.c_str(), mConfig.strMAC.length(), strQrPath.c_str() );
 
 	return TRUE;
 }
@@ -212,18 +222,8 @@ int Controller::connectCenter()
 	int nFD = cmpClient->start( AF_INET, mConfig.strCenterServerIP.c_str(), nPort );
 	if ( cmpClient->isValidSocketFD() )
 	{
-//		cmpClient->make_socket_non_blocking( nFD );
 		_DBG( "[Controller] Connect Center Success." )
 		sendCommandtoCenter( bind_request, STATUS_ROK, getSequence(), false );
-
-		/*		char buf[MAX_DATA_LEN];
-		 void *pbuf;
-		 pbuf = buf;
-		 if ( 0 >= cmpClient->socketrecv( cmpClient->getSocketfd(), 16, &pbuf, 1000 ) )
-		 {
-		 _DBG( "[Controller] bind response fail." )
-		 }
-		 */
 	}
 	else
 	{
@@ -336,6 +336,12 @@ int Controller::cmpBind(int nSocket, int nCommand, int nSequence, const void * p
 		sendCommandtoClient( nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true );
 	}
 	rData.clear();
+	return 0;
+}
+
+int Controller::cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData)
+{
+	sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
 	return 0;
 }
 

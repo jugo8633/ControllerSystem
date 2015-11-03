@@ -13,6 +13,7 @@
 #include <syslog.h>
 #include <ctime>
 #include <iostream>
+#include <map>
 
 using namespace std;
 /*
@@ -75,9 +76,47 @@ struct CMP_PACKET
 #define STATUS_RINVBNDSTS					0x00000004		//Incorrect BIND Status for given command
 #define STATUS_RALYBND							0x00000005		//Already in Bound State
 #define STATUS_RSYSERR								0x00000008		//System Error
-#define STATUS_RBINDFAIL							0x0000000D	//Bind Failed
-#define STATUS_RINVCTRLID						0x0000000E		//Invalid Controller ID
-#define STATUS_RINVBODY							0x00000010		//Invalid Packet Body Data
+#define STATUS_RBINDFAIL							0x00000010		//Bind Failed
+#define STATUS_RPPSFAIL							0x00000011		//Power Port Setting Fail
+#define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
+#define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
+
+template<typename T, typename U>
+class create_map
+{
+	private:
+		std::map<T, U> m_map;
+	public:
+		create_map(const T& key, const U& val)
+		{
+			m_map[key] = val;
+		}
+
+		create_map<T, U>& operator()(const T& key, const U& val)
+		{
+			m_map[key] = val;
+			return *this;
+		}
+
+		operator std::map<T, U>()
+		{
+			return m_map;
+		}
+
+};
+
+static map<int, string> mapCommand = create_map<int, string>( generic_nack, "generic_nack" )( bind_request, "bind_request" )( bind_response, "bind_response" )(
+authentication_request, "authentication_request" )( authentication_response, "authentication_response" )( access_log_request, "access_log_request" )( access_log_response,
+		"access_log_response" )( enquire_link_request, "enquire_link_request" )( enquire_link_response, "enquire_link_response" )( unbind_request, "unbind_request" )(
+unbind_response, "unbind_response" )( update_request, "update_request" )( update_response, "update_response" )( reboot_request, "reboot_request" )( reboot_response,
+		"reboot_response" )( config_request, "config_request" )( config_response, "config_response" )( power_port_request, "power_port_request" )( power_port_response,
+		"power_port_response" );
+
+static map<int, string> mapStatus = create_map<int, string>\
+( STATUS_ROK, "No Error" )( STATUS_RINVMSGLEN, "Message Length is invalid" )( STATUS_RINVCMDLEN,
+		"Command Length is invalid" )( STATUS_RINVCMDID, "Invalid Command ID" )( STATUS_RINVBNDSTS, "Incorrect BIND Status for given command" )( STATUS_RALYBND,
+		"Already in Bound State" )( STATUS_RSYSERR, "System Error" )(
+STATUS_RBINDFAIL, "Bind Failed" )( STATUS_RPPSFAIL, "Power Port Setting Fail" )( STATUS_RINVBODY, "Invalid Packet Body Data" )( STATUS_RINVCTRLID, "Invalid Controller ID" );
 
 inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc, const char *szLogPath = 0, int nClienFD = 0)
 {
@@ -87,103 +126,8 @@ inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, c
 	memset( szCmd, 0, sizeof(szCmd) );
 	memset( szSta, 0, sizeof(szSta) );
 
-	switch ( nCommand )
-	{
-		case generic_nack:
-			strcpy( szCmd, "generic_nack" );
-			break;
-		case bind_request:
-			strcpy( szCmd, "bind_request" );
-			break;
-		case bind_response:
-			strcpy( szCmd, "bind_response" );
-			break;
-		case authentication_request:
-			strcpy( szCmd, "authentication_request" );
-			break;
-		case authentication_response:
-			strcpy( szCmd, "authentication_response" );
-			break;
-		case access_log_request:
-			strcpy( szCmd, "access_log_request" );
-			break;
-		case access_log_response:
-			strcpy( szCmd, "access_log_response" );
-			break;
-		case enquire_link_request:
-			strcpy( szCmd, "enquire_link_request" );
-			break;
-		case enquire_link_response:
-			strcpy( szCmd, "enquire_link_response" );
-			break;
-		case unbind_request:
-			strcpy( szCmd, "unbind_request" );
-			break;
-		case unbind_response:
-			strcpy( szCmd, "unbind_response" );
-			break;
-		case update_request:
-			strcpy( szCmd, "update_request" );
-			break;
-		case update_response:
-			strcpy( szCmd, "update_response" );
-			break;
-		case reboot_request:
-			strcpy( szCmd, "client_reboot_request" );
-			break;
-		case reboot_response:
-			strcpy( szCmd, "client_reboot_response" );
-			break;
-		case config_request:
-			strcpy( szCmd, "config_request" );
-			break;
-		case config_response:
-			strcpy( szCmd, "config_response" );
-			break;
-		case power_port_request:
-			strcpy( szCmd, "power_port_request" );
-			break;
-		case power_port_response:
-			strcpy( szCmd, "power_port_response" );
-			break;
-	}
-
-	switch ( nStatus )
-	{
-		case STATUS_ROK:
-			strcpy( szSta, "No Error" );
-			break;
-		case STATUS_RINVMSGLEN:
-			strcpy( szSta, "Message Length is invalid" );
-			break;
-		case STATUS_RINVCMDLEN:
-			strcpy( szSta, "Command Length is invalid" );
-			break;
-		case STATUS_RINVCMDID:
-			strcpy( szSta, "Invalid Command ID" );
-			break;
-		case STATUS_RINVBNDSTS:
-			strcpy( szSta, "Incorrect BIND Status for given command" );
-			break;
-		case STATUS_RALYBND:
-			strcpy( szSta, "Already in Bound State" );
-			break;
-		case STATUS_RSYSERR:
-			strcpy( szSta, "System Error" );
-			break;
-		case STATUS_RBINDFAIL:
-			strcpy( szSta, "Bind Failed" );
-			break;
-		case STATUS_RINVCTRLID:
-			strcpy( szSta, "Invalid Controller ID" );
-			break;
-		case STATUS_RINVBODY:
-			strcpy( szSta, "Invalid Packet Body Data" );
-			break;
-		default:
-			strcpy( szSta, "No Error" );
-			break;
-	}
+	strcpy( szCmd, mapCommand[nCommand].c_str() );
+	strcpy( szSta, mapStatus[nStatus].c_str() );
 
 	std::time_t t = std::time( NULL );
 	char mbstr[100];

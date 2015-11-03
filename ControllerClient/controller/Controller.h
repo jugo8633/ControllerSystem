@@ -51,6 +51,7 @@ class Controller: public CObject
 		int sendCommandtoClient(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
 		int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
+		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
 
 	private:
