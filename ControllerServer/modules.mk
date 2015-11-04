@@ -10,4 +10,4 @@ export MODULES=global_inc \
 			 cmpHandler
 			
 			 
-export EXT_MODULES=
+export EXT_MODULES=extLibs/mongo-cxx-driver

@@ -40,7 +40,9 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-all: checkdirs package-u lib bin/$(TARGET)
+.IGNORE: clean
+
+all: checkdirs package-u mongoDB lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)center.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
@@ -63,6 +65,9 @@ clean:
 	@for libName in ${LIB_NAMES} ; do \
 		$(MAKE) V=99 -C $$libName clean; \
 	done
+	@for libName in ${EXT_MODULES} ; do \
+		$(MAKE) V=99 -C $$libName clean; \
+	done
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log
@@ -71,6 +76,7 @@ cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)userDB/*
 	@rm -rf $(DIR_APP_ROOT)deviceDB/*
 	@rm -rf $(DIR_APP_ROOT)configDB/*
+	@rm -rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build
 	@rm -rf $(DIR_APP_ROOT)libs/*
 	
 mk_debug:
@@ -94,5 +100,9 @@ package-u:
 	apt-get -y install build-essential
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	
-
+mongoDB:
+	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons;
+	@mv $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/linux2/normal/libmongoclient.a $(DIR_APP_ROOT)/libs/libmongoclient.a
+	@echo -ne '\n###### MongoDB Build Done. ######\n'
+	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))
