@@ -77,6 +77,7 @@ cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)userDB/*
 	@rm -rf $(DIR_APP_ROOT)deviceDB/*
 	@rm -rf $(DIR_APP_ROOT)configDB/*
+	@rm -rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build
 	@rm -rf $(DIR_APP_ROOT)libs/*
 	
 mk_debug:
