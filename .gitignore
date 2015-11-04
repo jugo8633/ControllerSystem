@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+*/.deps
 
 # Compiled Dynamic libraries
 *.so
