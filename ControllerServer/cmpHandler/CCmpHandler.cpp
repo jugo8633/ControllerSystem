@@ -154,12 +154,26 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				memcpy( temp, pBody, 1 );
 				++pBody;
 				rData.setData( "wire", temp );
+				_DBG( "[CMP] Body Get Wire:%s", temp )
 				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
 				{
 					memset( temp, 0, sizeof(temp) );
 					strcpy( temp, pBody );
 					rData.setData( "port", temp );
 					nStrLen = strlen( temp );
+					++nStrLen;
+					pBody += nStrLen;
+					_DBG( "[CMP] Body Get Port:%s", temp )
+				}
+				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
+				{
+					memset( temp, 0, sizeof(temp) );
+					strcpy( temp, pBody );
+					rData.setData( "controller", temp );
+					nStrLen = strlen( temp );
+					++nStrLen;
+					pBody += nStrLen;
+					_DBG( "[CMP] Body Get Controller:%s", temp )
 				}
 				break;
 		}

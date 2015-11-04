@@ -7,7 +7,8 @@ export MODULES=global_inc \
 			 socketHandler	\
 			 threadHandler	\
 			 dataHandler	\
-			 cmpHandler
+			 cmpHandler	\
+			 sqliteHandler
 			
 			 
 export EXT_MODULES=extLibs/mongo-cxx-driver

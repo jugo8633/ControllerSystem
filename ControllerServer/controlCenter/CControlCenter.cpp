@@ -14,6 +14,7 @@
 #include "utility.h"
 #include "CCmpHandler.h"
 #include "CDataHandler.cpp"
+#include "CSqliteHandler.h"
 
 using namespace std;
 
@@ -28,10 +29,8 @@ static int getSequence()
 	return msnSequence;
 }
 
-map<string, string> mapWire;
-
 CControlCenter::CControlCenter() :
-		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler )
+		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -69,6 +68,10 @@ int CControlCenter::init(std::string strConf)
 	}
 
 	mConfig.strLogPath = config->getValue( "LOG", "log" );
+	mConfig.strServerPort = config->getValue( "CENTER", "port" );
+	string strControllerDB = config->getValue( "SQLITE", "db_controller" );
+	delete config;
+
 	if ( mConfig.strLogPath.empty() )
 	{
 		mConfig.strLogPath = "/data/logs/center.log";
@@ -76,15 +79,23 @@ int CControlCenter::init(std::string strConf)
 	mkdirp( mConfig.strLogPath );
 	_DBG( "[Center] Log Path:%s", mConfig.strLogPath.c_str() );
 
-	/** Get Server Port **/
-	mConfig.strServerPort = config->getValue( "CENTER", "port" );
 	if ( mConfig.strServerPort.empty() )
 	{
 		mConfig.strServerPort = "6607";
 	}
 	_DBG( "[Center] Server Port:%s", mConfig.strServerPort.c_str() );
 
-	delete config;
+	if ( strControllerDB.empty() )
+	{
+		strControllerDB = "/data/sqlite/controller.db";
+	}
+	mkdirp( strControllerDB );
+	if ( !sqlite->openControllerDB( strControllerDB.c_str() ) )
+	{
+		_DBG( "[Center] Open Sqlite DB controller fail" )
+		return FALSE;
+	}
+	_DBG( "[Center] Open Sqlite DB controller Success" )
 
 	return TRUE;
 }
@@ -233,10 +244,10 @@ int CControlCenter::cmpPowerPort(int nSocket, int nCommand, int nSequence, const
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
-	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "port" ) && mapWire.end() != mapWire.find( rData["wire"] ) && 4 <= rData["port"].length() )
+	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "port" ) && rData.isValidKey( "controller" ) && 4 <= rData["port"].length() )
 	{
-		_DBG( "[Center] Power Port Setting Wire:%s Port:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), nSocket )
-
+		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		_DBG( "[Center] Power Port Setting Wire:%s Port:%s Controller:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), rData["controller"].c_str(), nSocket )
 	}
 	else
 	{
@@ -265,7 +276,7 @@ void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus( pPacket );
 	cmpHeader.sequence_number = cmpParser->getSequence( pPacket );
 
-	printPacket( cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length, "[Controller Recv]", mConfig.strLogPath.c_str(), nClientFD );
+	printPacket( cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length, "[Center Recv]", mConfig.strLogPath.c_str(), nClientFD );
 
 	if ( cmpParser->isAckPacket( cmpHeader.command_id ) )
 	{

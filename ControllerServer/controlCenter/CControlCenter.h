@@ -21,6 +21,7 @@ typedef struct
 
 class CSocketServer;
 class CCmpHandler;
+class CSqliteHandler;
 
 class CControlCenter: public CObject
 {
@@ -48,6 +49,7 @@ class CControlCenter: public CObject
 		CONFIG mConfig;
 		CSocketServer *cmpServer;
 		CCmpHandler *cmpParser;
+		CSqliteHandler *sqlite;
 
 		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);
 		MemFn cmpRequest[MAX_FUNC_POINT];
