@@ -1,9 +1,0 @@
-/Makefile
-.deps
-/config.h
-/config.log
-/config.status
-/libqrencode.pc
-/libtool
-/qrencode.1
-/stamp-h1
