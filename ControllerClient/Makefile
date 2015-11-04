@@ -43,6 +43,8 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
+.IGNORE: clean
+
 all: checkdirs package-u libpng qrencode mongoDB lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)controller.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
