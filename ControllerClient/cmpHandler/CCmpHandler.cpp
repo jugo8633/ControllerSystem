@@ -116,22 +116,17 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 {
 	int nRet = 0;
 	int nStrLen = 0;
-	int nTotalLen = 0;
 	int nBodyLen = 0;
 	int nIndex = 0;
-	int nPort = 0;
 	char * pBody;
 	char temp[MAX_SIZE];
-	int nMacCount = 0;
-	char macName[13];
 
 	struct sPORT
 	{
 			int nPort;
 	};
 
-	nTotalLen = getLength( pData );
-	nBodyLen = nTotalLen - sizeof(CMP_HEADER);
+	nBodyLen = getLength( pData ) - sizeof(CMP_HEADER);
 
 	if ( 0 < nBodyLen )
 	{
@@ -154,12 +149,25 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				memcpy( temp, pBody, 1 );
 				++pBody;
 				rData.setData( "wire", temp );
+
+				memset( temp, 0, sizeof(temp) );
+				memcpy( temp, pBody, 1 );
+				++pBody;
+				rData.setData( "port", temp );
+
+				memset( temp, 0, sizeof(temp) );
+				memcpy( temp, pBody, 1 );
+				++pBody;
+				rData.setData( "state", temp );
+
 				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
 				{
 					memset( temp, 0, sizeof(temp) );
 					strcpy( temp, pBody );
-					rData.setData( "port", temp );
+					rData.setData( "controller", temp );
 					nStrLen = strlen( temp );
+					++nStrLen;
+					pBody += nStrLen;
 				}
 				break;
 		}

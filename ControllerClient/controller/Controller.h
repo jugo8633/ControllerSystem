@@ -53,6 +53,7 @@ class Controller: public CObject
 		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
+		void setUnbindState(int nSocketFD);
 
 	private:
 		CONFIG mConfig;

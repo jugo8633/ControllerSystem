@@ -149,6 +149,7 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 			cmpServer->socketSend( nId, "welcome", 7 );
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
+			setUnbindState( (int) nId );
 			_DBG( "[Controller] Socket Client FD:%d Close", (int )nId )
 			break;
 		case EVENT_COMMAND_CONTROL_CENTER_DISCONNECT:
@@ -328,6 +329,12 @@ int Controller::cmpBind(int nSocket, int nCommand, int nSequence, const void * p
 	if ( 0 < nRet )
 	{
 		_DBG( "[Controller] Bind Get Controller ID:%s Socket FD:%d", rData["id"].c_str(), nSocket )
+		string strSql = "DELETE FROM device WHERE id = '" + rData["id"] + "';";
+		sqlite->deviceSqlExec( strSql.c_str() );
+
+		const string strSocketFD = ConvertToString( nSocket );
+		strSql = "INSERT INTO device(id, status, socket_fd, created_date)values('" + rData["id"] + "',1," + strSocketFD + ",datetime());";
+		sqlite->deviceSqlExec( strSql.c_str() );
 		sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
 	}
 	else
@@ -341,6 +348,7 @@ int Controller::cmpBind(int nSocket, int nCommand, int nSequence, const void * p
 
 int Controller::cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData)
 {
+	setUnbindState( nSocket );
 	sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
 	return 0;
 }
@@ -349,34 +357,67 @@ int Controller::cmpPowerPort(int nSocket, int nCommand, int nSequence, const voi
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
-	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "port" ) && mapWire.end() != mapWire.find( rData["wire"] ) && 4 <= rData["port"].length() )
+	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "port" ) && rData.isValidKey( "state" ) && mapWire.end() != mapWire.find( rData["wire"] ) )
 	{
-		_DBG( "[Controller] Power Port Setting Wire:%s Port:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), nSocket )
+		_DBG( "[Controller] Power Port Setting Wire:%s Port:%s State:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), rData["state"].c_str(), nSocket )
+		bool bState = true;
+		int nPort = atoi( rData["port"].c_str() );
+
+		if ( 0 == rData["state"].compare( "0" ) )
+		{
+			bState = false;
+		}
+
+		string strState = areawell->getPortStatus( mapWire[rData["wire"]] );
+		if ( strState.empty() )
+		{
+			sendCommandtoClient( nSocket, nCommand, STATUS_RPPSFAIL, nSequence, true );
+			_DBG( "[Controller] Power Port Setting Fail!!" )
+			return FAIL;
+		}
+
+		_DBG( "[Controller] Get Wire:%s Power Port State:%s", rData["wire"].c_str(), strState.c_str() )
+
 		bool bPort1 = true;
 		bool bPort2 = true;
 		bool bPort3 = true;
 		bool bPort4 = true;
-		if ( 0 == rData["port"].substr( 0, 1 ).compare( "0" ) )
+		if ( 0 == strState.substr( 0, 1 ).compare( "0" ) )
 		{
 			bPort1 = false;
 		}
 
-		if ( 0 == rData["port"].substr( 1, 1 ).compare( "0" ) )
+		if ( 0 == strState.substr( 1, 1 ).compare( "0" ) )
 		{
 			bPort2 = false;
 		}
 
-		if ( 0 == rData["port"].substr( 2, 1 ).compare( "0" ) )
+		if ( 0 == strState.substr( 2, 1 ).compare( "0" ) )
 		{
 			bPort3 = false;
 		}
 
-		if ( 0 == rData["port"].substr( 3, 1 ).compare( "0" ) )
+		if ( 0 == strState.substr( 3, 1 ).compare( "0" ) )
 		{
 			bPort4 = false;
 		}
-		_DBG( "[Control] Set Power Port Status: %s %s %s %s", rData["port"].substr( 0, 1 ).c_str(), rData["port"].substr( 1, 1 ).c_str(), rData["port"].substr( 2, 1 ).c_str(),
-				rData["port"].substr( 3, 1 ).c_str() )
+
+		switch ( nPort )
+		{
+			case 1:
+				bPort1 = bState;
+				break;
+			case 2:
+				bPort2 = bState;
+				break;
+			case 3:
+				bPort3 = bState;
+				break;
+			case 4:
+				bPort4 = bState;
+				break;
+		}
+		_DBG( "[Control] Set Power Port Status: %d %d %d %d", bPort1, bPort2, bPort3, bPort4 )
 		nRet = areawell->setPortState( mapWire[rData["wire"]], bPort1, bPort2, bPort3, bPort4, 5 );
 		if ( -1 != nRet )
 		{
@@ -399,6 +440,11 @@ int Controller::cmpPowerPort(int nSocket, int nCommand, int nSequence, const voi
 	return 0;
 }
 
+void Controller::setUnbindState(int nSocketFD)
+{
+	string strSql = "UPDATE device set status = 0 , updated_date = datetime() WHERE socket_fd = " + ConvertToString( nSocketFD ) + ";";
+	sqlite->deviceSqlExec( strSql.c_str() );
+}
 /**
  * 	Receive CMP from Client
  */
