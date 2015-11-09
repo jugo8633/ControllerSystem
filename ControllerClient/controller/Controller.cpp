@@ -17,6 +17,7 @@
 #include "utility.h"
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
+#include "CThreadHandler.h"
 #include <map>
 
 using namespace std;
@@ -37,9 +38,12 @@ static int getSequence()
 
 map<string, string> mapWire;
 
+/** Enquire link function declare for enquire link thread **/
+void *threadEnquireLinkRequest(void *argv);
+
 Controller::Controller() :
 		CObject(), cmpServer( new CSocketServer ), cmpClient( new CSocketClient ), areawell( CAreawell::getInstance() ), cmpParser( new CCmpHandler ), sqlite(
-				CSqliteHandler::getInstance() )
+				CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -180,6 +184,7 @@ int Controller::startServer()
 			return FALSE;
 		}
 		/** Start TCP/IP socket listen **/
+		tdEnquireLink->createThread( threadEnquireLinkRequest, this, 0, PTHREAD_CREATE_DETACHED );
 		if ( FAIL == cmpServer->start( AF_INET, NULL, nPort ) )
 		{
 			_DBG( "CMP Server Socket Create Fail" )
@@ -197,6 +202,13 @@ int Controller::startServer()
 
 void Controller::stopServer()
 {
+	if ( tdEnquireLink )
+	{
+		tdEnquireLink->threadExit();
+		delete tdEnquireLink;
+		_DBG( "[Controller] Stop Enquire Link Thread" )
+	}
+
 	if ( cmpServer )
 	{
 		cmpServer->stop();
@@ -207,6 +219,7 @@ void Controller::stopServer()
 
 int Controller::connectCenter()
 {
+	int nRet = FAIL;
 	if ( mConfig.strCenterServerIP.empty() || mConfig.strCenterServerPort.empty() )
 	{
 		_DBG( "[Controller] Connect Control Center Fail, Config Invalid" )
@@ -220,17 +233,17 @@ int Controller::connectCenter()
 		return FALSE;
 	}
 
-	int nFD = cmpClient->start( AF_INET, mConfig.strCenterServerIP.c_str(), nPort );
+	cmpClient->start( AF_INET, mConfig.strCenterServerIP.c_str(), nPort );
 	if ( cmpClient->isValidSocketFD() )
 	{
 		_DBG( "[Controller] Connect Center Success." )
-		sendCommandtoCenter( bind_request, STATUS_ROK, getSequence(), false );
+		nRet = cmpBindRequest( cmpClient->getSocketfd() );
 	}
 	else
 	{
 		_DBG( "[Controller] Connect Center Fail." )
 	}
-	return nFD;
+	return nRet;
 }
 
 int Controller::sendCommandtoCenter(int nCommand, int nStatus, int nSequence, bool isResp)
@@ -255,6 +268,37 @@ int Controller::sendCommandtoCenter(int nCommand, int nStatus, int nSequence, bo
 		printPacket( nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Center]", mConfig.strLogPath.c_str(), cmpClient->getSocketfd() );
 	}
 
+	return nRet;
+}
+
+int Controller::cmpBindRequest(const int nSocket)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset( &packet, 0, sizeof(CMP_PACKET) );
+
+	cmpParser->formatHeader( bind_request, STATUS_ROK, getSequence(), &pHeader );
+
+	memcpy( pIndex, mConfig.strMAC.c_str(), mConfig.strMAC.length() );
+	pIndex += mConfig.strMAC.length();
+	nBody_len += mConfig.strMAC.length();
+	memcpy( pIndex, "\0", 1 );
+	++pIndex;
+	++nBody_len;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl( nTotal_len );
+
+	nRet = cmpClient->socketSend( nSocket, &packet, nTotal_len );
+
+	string strMsg = "Bind to Center Controller ID:" + mConfig.strMAC;
+	printLog( strMsg, "[Controller]", mConfig.strLogPath );
 	return nRet;
 }
 
@@ -488,4 +532,100 @@ void Controller::onCMP(int nClientFD, int nDataLen, const void *pData)
 void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
 {
 	_DBG( "[Controller] Receive CMP From Control Center:%d Length:%d", nServerFD, nDataLen )
+	int nRet = -1;
+	int nPacketLen = 0;
+	CMP_HEADER cmpHeader;
+	char *pPacket;
+
+	pPacket = (char*) const_cast<void*>( pData );
+	memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+
+	cmpHeader.command_id = cmpParser->getCommand( pPacket );
+	cmpHeader.command_length = cmpParser->getLength( pPacket );
+	cmpHeader.command_status = cmpParser->getStatus( pPacket );
+	cmpHeader.sequence_number = cmpParser->getSequence( pPacket );
+
+	printPacket( cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length, "[Controller Recv]", mConfig.strLogPath.c_str(), nServerFD );
+
+	if ( cmpParser->isAckPacket( cmpHeader.command_id ) )
+	{
+		ackPacket( nServerFD, cmpHeader.command_id, pPacket );
+		return;
+	}
+
+	if ( 0x000000FF < cmpHeader.command_id )
+	{
+		sendCommandtoClient( nServerFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true );
+		return;
+	}
+
+	(this->*this->cmpRequest[cmpHeader.command_id])( nServerFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket );
+}
+
+int Controller::cmpEnquireLinkRequest(const int nSocketFD)
+{
+	return sendCommandtoClient( nSocketFD, enquire_link_request, STATUS_ROK, getSequence(), false );
+}
+
+void Controller::runEnquireLinkRequest()
+{
+	int nSocketFD = -1;
+	list<int> listValue;
+	string strSql;
+	string strLog;
+
+	while ( 1 )
+	{
+		tdEnquireLink->threadSleep( 10 );
+
+		/** Check Enquire link response **/
+		if ( vEnquireLink.size() )
+		{
+			/** Close socket that doesn't deliver enquire link response within 10 seconds **/
+			for ( vector<int>::iterator it = vEnquireLink.begin() ; it != vEnquireLink.end() ; ++it )
+			{
+				strSql = "DELETE FROM device WHERE socket_fd = " + ConvertToString( *it ) + ";";
+				sqlite->deviceSqlExec( strSql.c_str() );
+				close( *it );
+				strLog = "Dropped connection, Close socket file descriptor filedes = " + ConvertToString( *it );
+				printLog( strLog, "[Controller]", mConfig.strLogPath );
+			}
+		}
+		vEnquireLink.clear();
+
+		if ( 0 < getBindSocket( listValue ) )
+		{
+			strLog = "Run Enquire Link Request";
+			printLog( strLog, "[Controller]", mConfig.strLogPath );
+			for ( list<int>::iterator i = listValue.begin() ; i != listValue.end() ; ++i )
+			{
+				nSocketFD = *i;
+				vEnquireLink.push_back( nSocketFD );
+				cmpEnquireLinkRequest( nSocketFD );
+			}
+		}
+		listValue.clear();
+
+		/**  Check Control Center COnnection **/
+		if ( !cmpClient->isValidSocketFD() )
+		{
+			_DBG( "[Controller] Control Center Disconnect will reconnect" )
+			connectCenter();
+		}
+	}
+
+}
+
+int Controller::getBindSocket(list<int> &listValue)
+{
+	string strSql = "SELECT socket_fd FROM device WHERE status = 1;";
+	return sqlite->getDeviceColumeValueInt( strSql.c_str(), listValue, 0 );
+}
+
+/***************** Thread Function *********************/
+void *threadEnquireLinkRequest(void *argv)
+{
+	Controller* ss = reinterpret_cast<Controller*>( argv );
+	ss->runEnquireLinkRequest();
+	return NULL;
 }

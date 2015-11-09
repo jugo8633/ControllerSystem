@@ -28,32 +28,32 @@ inline static void thread_sleep(long int sec)
 	struct timeval tv;
 	struct timezone tz;
 
-	bzero(&time, sizeof(struct timespec));
-	gettimeofday(&tv, &tz);
+	bzero( &time, sizeof(struct timespec) );
+	gettimeofday( &tv, &tz );
 
 	time.tv_sec = tv.tv_sec + sec;
 
-	pthread_mutex_lock(&mutex);
-	pthread_cond_timedwait(&cond, &mutex, &time);
-	pthread_mutex_unlock(&mutex);
-	pthread_mutex_destroy(&mutex);
-	pthread_cond_destroy(&cond);
+	pthread_mutex_lock( &mutex );
+	pthread_cond_timedwait( &cond, &mutex, &time );
+	pthread_mutex_unlock( &mutex );
+	pthread_mutex_destroy( &mutex );
+	pthread_cond_destroy( &cond );
 
 }
 
 CThreadHandler::CThreadHandler()
 {
 	// TODO Auto-generated constructor stub
-	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_init( &mutex, NULL );
 }
 
 CThreadHandler::~CThreadHandler()
 {
 	// TODO Auto-generated destructor stub
-	pthread_mutex_destroy(&mutex);
+	pthread_mutex_destroy( &mutex );
 }
 
-pthread_t CThreadHandler::createThread(void* (*entry)(void*), void* arg, int nWait)
+pthread_t CThreadHandler::createThread(void* (*entry)(void*), void* arg, int nWait, int nType)
 {
 	pthread_t thd;
 	int rc = 0;
@@ -63,7 +63,7 @@ pthread_t CThreadHandler::createThread(void* (*entry)(void*), void* arg, int nWa
 	int priority_max = 99;
 	//int priority_min = 0;
 
-	pthread_attr_init(&attr);
+	pthread_attr_init( &attr );
 
 	/*
 	 * set stack size,
@@ -71,49 +71,48 @@ pthread_t CThreadHandler::createThread(void* (*entry)(void*), void* arg, int nWa
 	 * min value: PTHREAD_STACK_MIN
 	 */
 	// pthread_attr_setstacksize(&attr, _THREAD_STACK_SIZE_4MB_);
-
 	/**
 	 * 設為非分離線程 or 分離線程
 	 * PTHREAD_CREATE_DETACHED（分離線程）和 PTHREAD _CREATE_JOINABLE（非分離線程）
 	 */
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	pthread_attr_setdetachstate( &attr, nType );
 
 	/**
 	 * 設為綁定的
 	 * PTHREAD_SCOPE_SYSTEM（綁定的）和PTHREAD_SCOPE_PROCESS（非綁定的）
 	 */
-	pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+	pthread_attr_setscope( &attr, PTHREAD_SCOPE_SYSTEM );
 
 	/**
 	 * 設定線程的優先級
 	 * thread policy: SCHED_FIFO, SCHED_RR 和 SCHED_OTHER
 	 */
-	pthread_attr_getschedpolicy(&attr, &policy);
-	if (SCHED_FIFO != policy)
+	pthread_attr_getschedpolicy( &attr, &policy );
+	if ( SCHED_FIFO != policy )
 	{
 		policy = SCHED_FIFO;
-		pthread_attr_setschedpolicy(&attr, policy);
+		pthread_attr_setschedpolicy( &attr, policy );
 	}
 
 	//	priority_max = sched_get_priority_max(policy);
 	//	priority_min = sched_get_priority_min(policy);
 
-	pthread_attr_getschedparam(&attr, &param);
+	pthread_attr_getschedparam( &attr, &param );
 	param.sched_priority = priority_max;
-	pthread_attr_setschedparam(&attr, &param);
+	pthread_attr_setschedparam( &attr, &param );
 
-	if (0 < nWait)
+	if ( 0 < nWait )
 	{
-		thread_sleep(nWait);
+		thread_sleep( nWait );
 	}
 
-	rc = pthread_create(&thd, &attr, entry, arg);
+	rc = pthread_create( &thd, &attr, entry, arg );
 
-	pthread_attr_destroy(&attr);
+	pthread_attr_destroy( &attr );
 
-	if (0 != rc)
+	if ( 0 != rc )
 	{
-		perror("pthread_create");
+		perror( "pthread_create" );
 		return 0;
 	}
 
@@ -123,31 +122,31 @@ pthread_t CThreadHandler::createThread(void* (*entry)(void*), void* arg, int nWa
 void CThreadHandler::threadJoin(pthread_t thdid)
 {
 	int rc = 0;
-	rc = pthread_join(thdid, NULL);
-	if (0 != rc)
+	rc = pthread_join( thdid, NULL );
+	if ( 0 != rc )
 	{
-		perror("pthread_join");
+		perror( "pthread_join" );
 	}
 }
 
 void CThreadHandler::threadSleep(long int sec)
 {
-	thread_sleep(sec);
+	thread_sleep( sec );
 }
 
 void CThreadHandler::threadExit()
 {
-	pthread_exit(NULL);
+	pthread_exit( NULL );
 }
 
 void CThreadHandler::threadLock()
 {
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock( &mutex );
 }
 
 void CThreadHandler::threadUnlock()
 {
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock( &mutex );
 }
 
 pthread_t CThreadHandler::getThreadID()
@@ -157,23 +156,23 @@ pthread_t CThreadHandler::getThreadID()
 
 int CThreadHandler::threadCancel(pthread_t thread)
 {
-	int kill_rc = pthread_kill(thread, 0);
+	int kill_rc = pthread_kill( thread, 0 );
 
-	if (kill_rc == ESRCH)
+	if ( kill_rc == ESRCH )
 	{
 		/**
 		 * the specified thread did not exists or already quit
 		 */
-		_DBG("[Thread] The specified thread did not exists or already quit");
+		_DBG( "[Thread] The specified thread did not exists or already quit" );
 	}
-	else if (kill_rc == EINVAL)
+	else if ( kill_rc == EINVAL )
 	{
-		_DBG("[Thread] Signal is invalid for pthread_kill");
+		_DBG( "[Thread] Signal is invalid for pthread_kill" );
 	}
 	else
 	{
-		_DBG("[Thread] Thread is valid to cancel, Id=%lu", thread);
-		return pthread_cancel(thread);
+		_DBG( "[Thread] Thread is valid to cancel, Id=%lu", thread );
+		return pthread_cancel( thread );
 	}
 
 	return 0;

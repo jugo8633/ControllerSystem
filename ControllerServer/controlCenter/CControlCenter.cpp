@@ -15,6 +15,7 @@
 #include "CCmpHandler.h"
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
+#include "CThreadHandler.h"
 
 using namespace std;
 
@@ -29,8 +30,11 @@ static int getSequence()
 	return msnSequence;
 }
 
+/** Enquire link function declare for enquire link thread **/
+void *threadEnquireLinkRequest(void *argv);
+
 CControlCenter::CControlCenter() :
-		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() )
+		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -148,11 +152,20 @@ int CControlCenter::startServer()
 		return FALSE;
 	}
 
+	tdEnquireLink->createThread( threadEnquireLinkRequest, this );
+
 	return TRUE;
 }
 
 void CControlCenter::stopServer()
 {
+	if ( tdEnquireLink )
+	{
+		tdEnquireLink->threadExit();
+		delete tdEnquireLink;
+		_DBG( "[Center] Stop Enquire Link Thread" )
+	}
+
 	if ( cmpServer )
 	{
 		cmpServer->stop();
@@ -184,6 +197,7 @@ int CControlCenter::sendCommand(int nSocket, int nCommand, int nStatus, int nSeq
 
 void CControlCenter::ackPacket(int nClientSocketFD, int nCommand, const void * pData)
 {
+	string strLog;
 	switch ( nCommand )
 	{
 		case generic_nack:
@@ -195,6 +209,16 @@ void CControlCenter::ackPacket(int nClientSocketFD, int nCommand, const void * p
 		case access_log_response:
 			break;
 		case enquire_link_response:
+			for ( vector<int>::iterator it = vEnquireLink.begin() ; it != vEnquireLink.end() ; ++it )
+			{
+				if ( nClientSocketFD == *it )
+				{
+					vEnquireLink.erase( it );
+					strLog = "Keep alive Socket FD = " + ConvertToString( *it );
+					printLog( strLog, "[Center]", mConfig.strLogPath );
+					break;
+				}
+			}
 			break;
 		case unbind_response:
 			break;
@@ -223,15 +247,28 @@ int CControlCenter::cmpBind(int nSocket, int nCommand, int nSequence, const void
 	if ( 0 < nRet )
 	{
 		_DBG( "[Center] Bind Get Controller ID:%s Socket FD:%d", rData["id"].c_str(), nSocket )
-		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		string strSql = "DELETE FROM controller WHERE id = '" + rData["id"] + "';";
+		nRet = sqlite->controllerSqlExec( strSql.c_str() );
+
+		if ( SUCCESS == nRet )
+		{
+			const string strSocketFD = ConvertToString( nSocket );
+			strSql = "INSERT INTO controller(id, status, socket_fd, created_date)values('" + rData["id"] + "',1," + strSocketFD + ",datetime());";
+			nRet = sqlite->controllerSqlExec( strSql.c_str() );
+			if ( SUCCESS == nRet )
+			{
+				sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+				rData.clear();
+				return nRet;
+			}
+		}
 	}
-	else
-	{
-		_DBG( "[Center] Bind Fail, Invalid Controller ID Socket FD:%d", nSocket )
-		sendCommand( nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true );
-	}
+
+	_DBG( "[Center] Bind Fail, Invalid Controller ID Socket FD:%d", nSocket )
+	sendCommand( nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true );
 	rData.clear();
-	return 0;
+
+	return FAIL;
 }
 
 int CControlCenter::cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData)
@@ -240,14 +277,40 @@ int CControlCenter::cmpUnbind(int nSocket, int nCommand, int nSequence, const vo
 	return 0;
 }
 
+int CControlCenter::getControllerSocketFD(std::string strControllerID)
+{
+	int nRet = FAIL;
+	string strSQL = "SELECT socket_fd FROM controller WHERE status = 1 and id = '" + strControllerID + "';";
+	list<int> listValue;
+
+	if ( 0 < sqlite->getControllerColumeValueInt( strSQL.c_str(), listValue, 0 ) )
+	{
+		list<int>::iterator i = listValue.begin();
+		nRet = *i;
+	}
+	listValue.clear();
+	return nRet;
+}
+
 int CControlCenter::cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
-	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "port" ) && rData.isValidKey( "controller" ) && 4 <= rData["port"].length() )
+	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "port" ) && rData.isValidKey( "state" ) && rData.isValidKey( "controller" ) )
 	{
 		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
-		_DBG( "[Center] Power Port Setting Wire:%s Port:%s Controller:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), rData["controller"].c_str(), nSocket )
+		_DBG( "[Center] Power Port Setting Wire:%s Port:%s state:%s Controller:%s Socket FD:%d", rData["wire"].c_str(), rData["port"].c_str(), rData["state"].c_str(),
+				rData["controller"].c_str(), nSocket )
+		int nFD = getControllerSocketFD( rData["controller"] );
+		if ( 0 < nFD )
+		{
+			_DBG( "[Center] Get Socket FD:%d Controller ID:%s", nFD, rData["controller"].c_str() )
+			cmpPowerPortRequest( nFD, rData["wire"], rData["port"], rData["state"] );
+		}
+		else
+		{
+			_DBG( "[Center] Get Socket FD Fail Controller ID:%s", rData["controller"].c_str() )
+		}
 	}
 	else
 	{
@@ -257,6 +320,42 @@ int CControlCenter::cmpPowerPort(int nSocket, int nCommand, int nSequence, const
 	rData.clear();
 
 	return 0;
+}
+
+int CControlCenter::cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset( &packet, 0, sizeof(CMP_PACKET) );
+
+	cmpParser->formatHeader( power_port_request, STATUS_ROK, getSequence(), &pHeader );
+
+	memcpy( pIndex, strWire.c_str(), 1 ); // wire
+	++pIndex;
+	++nBody_len;
+
+	memcpy( pIndex, strPort.c_str(), 1 );	//	port
+	++pIndex;
+	++nBody_len;
+
+	memcpy( pIndex, strState.c_str(), 1 );	//	state
+	++pIndex;
+	++nBody_len;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl( nTotal_len );
+
+	nRet = cmpServer->socketSend( nSocket, &packet, nTotal_len );
+
+	string strMsg = "Power Port Request to SocketFD:" + ConvertToString( nSocket );
+	printLog( strMsg, "[Center]", mConfig.strLogPath );
+	return nRet;
 }
 
 void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
@@ -292,4 +391,65 @@ void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 
 	(this->*this->cmpRequest[cmpHeader.command_id])( nClientFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket );
 
+}
+
+void CControlCenter::runEnquireLinkRequest()
+{
+	int nSocketFD = -1;
+	list<int> listValue;
+	string strSql;
+	string strLog;
+
+	while ( 1 )
+	{
+		tdEnquireLink->threadSleep( 10 );
+
+		/** Check Enquire link response **/
+		if ( vEnquireLink.size() )
+		{
+			/** Close socket that doesn't deliver enquire link response within 10 seconds **/
+			for ( vector<int>::iterator it = vEnquireLink.begin() ; it != vEnquireLink.end() ; ++it )
+			{
+				strSql = "DELETE FROM controller WHERE socket_fd = " + ConvertToString( *it ) + ";";
+				sqlite->controllerSqlExec( strSql.c_str() );
+				close( *it );
+				strLog = "Dropped connection, Close socket file descriptor filedes = " + ConvertToString( *it );
+				printLog( strLog, "[Center]", mConfig.strLogPath );
+			}
+		}
+		vEnquireLink.clear();
+
+		if ( 0 < getBindSocket( listValue ) )
+		{
+			strLog = "Run Enquire Link Request";
+			printLog( strLog, "[Center]", mConfig.strLogPath );
+			for ( list<int>::iterator i = listValue.begin() ; i != listValue.end() ; ++i )
+			{
+				nSocketFD = *i;
+				vEnquireLink.push_back( nSocketFD );
+				cmpEnquireLinkRequest( nSocketFD );
+			}
+		}
+
+		listValue.clear();
+	}
+}
+
+int CControlCenter::cmpEnquireLinkRequest(const int nSocketFD)
+{
+	return sendCommand( nSocketFD, enquire_link_request, STATUS_ROK, getSequence(), false );
+}
+
+int CControlCenter::getBindSocket(list<int> &listValue)
+{
+	string strSql = "SELECT socket_fd FROM controller WHERE status = 1;";
+	return sqlite->getControllerColumeValueInt( strSql.c_str(), listValue, 0 );
+}
+
+/************************************* thread function **************************************/
+void *threadEnquireLinkRequest(void *argv)
+{
+	CControlCenter* ss = reinterpret_cast<CControlCenter*>( argv );
+	ss->runEnquireLinkRequest();
+	return NULL;
 }

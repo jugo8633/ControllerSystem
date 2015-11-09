@@ -11,23 +11,23 @@
 
 class CThreadHandler
 {
-public:
-	explicit CThreadHandler();
-	virtual ~CThreadHandler();
+	public:
+		explicit CThreadHandler();
+		virtual ~CThreadHandler();
 
-	/*
-	 * return thread id
-	 */
-	pthread_t createThread(void* (*entry)(void*), void* arg, int nWait = 0);
-	pthread_t getThreadID();
-	void threadSleep(long int sec);
-	void threadJoin(pthread_t thdid);
-	void threadExit();
-	void threadLock();
-	void threadUnlock();
-	int threadCancel(pthread_t thread);
+		/*
+		 * return thread id
+		 */
+		pthread_t createThread(void* (*entry)(void*), void* arg, int nWait = 0, int nType = PTHREAD_CREATE_JOINABLE);
+		pthread_t getThreadID();
+		void threadSleep(long int sec);
+		void threadJoin(pthread_t thdid);
+		void threadExit();
+		void threadLock();
+		void threadUnlock();
+		int threadCancel(pthread_t thread);
 
-private:
-	pthread_mutex_t mutex;
+	private:
+		pthread_mutex_t mutex;
 };
 

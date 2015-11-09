@@ -605,6 +605,8 @@ void CSocket::socketClose()
 
 void CSocket::socketClose(int nSocketFD)
 {
+	if ( m_nSocketFD == nSocketFD )
+		m_nSocketFD = -1;
 	close( nSocketFD );
 }
 

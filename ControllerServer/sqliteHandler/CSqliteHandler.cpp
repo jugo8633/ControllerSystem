@@ -104,6 +104,7 @@ CSqliteHandler* CSqliteHandler::getInstance()
 
 int CSqliteHandler::controllerSqlExec(const char *szSql)
 {
+	int nRet = FAIL;
 	char *zErrMsg = 0;
 	int rc = sqlite3_exec( dbController, szSql, callback, 0, &zErrMsg );
 	if ( rc != SQLITE_OK )
@@ -113,10 +114,11 @@ int CSqliteHandler::controllerSqlExec(const char *szSql)
 	}
 	else
 	{
+		nRet = SUCCESS;
 		_DBG( "[Sqlite] SQL exec successfully : %s", szSql );
 	}
 
-	return rc;
+	return nRet;
 }
 
 int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql)

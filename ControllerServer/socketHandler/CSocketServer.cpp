@@ -261,6 +261,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			nSequence = ntohl( cmpPacket.cmpHeader.sequence_number );
 			if ( enquire_link_request == nCommand )
 			{
+				_DBG( "[Socket Server] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nClientFD );
 				memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
 				nCommandResp = generic_nack | nCommand;
 				cmpHeader.command_id = htonl( nCommandResp );
