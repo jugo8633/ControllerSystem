@@ -101,6 +101,9 @@ package-u:
 	apt-get -y install sqlite3 libsqlite3-dev
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
+	apt-get -y install pkg-config
+	apt-get install autotools-dev
+	apt-get install libtool
 	apt-get -y install libqrencode-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	
