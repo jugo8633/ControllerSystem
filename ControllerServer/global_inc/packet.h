@@ -172,7 +172,7 @@ inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPa
 	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
 
 	char szLog[MAX_DATA_LEN];
-	sprintf( szLog, "%s-%s WMP : %-20s", mbstr, szDesc, szMsg );
+	sprintf( szLog, "%s-%s CMP : %-20s", mbstr, szDesc, szMsg );
 #ifdef DEBUG
 	printf("[DEBUG] %s\n" ,szLog);
 #else
