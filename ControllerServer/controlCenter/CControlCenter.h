@@ -43,11 +43,20 @@ class CControlCenter: public CObject
 		void onCMP(int nClientFD, int nDataLen, const void *pData);
 		int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
 		void ackPacket(int nClientSocketFD, int nCommand, const void * pData);
+
+		/**  Receive CMP Request **/
 		int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData);
+
+		/** Send CMP Request **/
 		int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
+
+		/** Send CMP Response **/
+		int cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData);
+
 		int getControllerSocketFD(std::string strControllerID);
 		int getBindSocket(std::list<int> &listValue);
 		int cmpEnquireLinkRequest(const int nSocketFD);

@@ -43,6 +43,7 @@ CControlCenter::CControlCenter() :
 	cmpRequest[bind_request] = &CControlCenter::cmpBind;
 	cmpRequest[unbind_request] = &CControlCenter::cmpUnbind;
 	cmpRequest[power_port_request] = &CControlCenter::cmpPowerPort;
+	cmpRequest[power_port_state_request] = &CControlCenter::cmpPowerPortState;
 }
 
 CControlCenter::~CControlCenter()
@@ -320,6 +321,77 @@ int CControlCenter::cmpPowerPort(int nSocket, int nCommand, int nSequence, const
 	rData.clear();
 
 	return 0;
+}
+
+int CControlCenter::cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet && rData.isValidKey( "wire" ) && rData.isValidKey( "controller" ) )
+	{
+		_DBG( "[Center] Power Port State Request Wire:%s Controller:%s Socket FD:%d", rData["wire"].c_str(), rData["controller"].c_str(), nSocket )
+		int nFD = getControllerSocketFD( rData["controller"] );
+		if ( 0 < nFD )
+		{
+			_DBG( "[Center] Get Socket FD:%d Controller ID:%s", nFD, rData["controller"].c_str() )
+			// sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+			cmpPowerPortStateResponse( nSocket, nSequence, "{\"count\":1,\"wires\":[{\"wire\":1,\"state\": \"1111\"}]}" );
+		}
+		else
+		{
+			sendCommand( nSocket, nCommand, STATUS_RSYSERR, nSequence, true );
+			_DBG( "[Center] Get Socket FD Fail Controller ID:%s", rData["controller"].c_str() )
+		}
+	}
+	else
+	{
+		_DBG( "[Center] Power Port Setting Fail, Invalid Body Parameters Socket FD:%d", nSocket )
+		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+	}
+	rData.clear();
+
+	return 0;
+}
+
+int CControlCenter::cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset( &packet, 0, sizeof(CMP_PACKET) );
+
+	cmpParser->formatHeader( power_port_state_response, STATUS_ROK, nSequence, &pHeader );
+
+	memcpy( pIndex, szData, strlen( szData ) );
+	pIndex += strlen( szData );
+	nBody_len += strlen( szData );
+	memcpy( pIndex, "\0", 1 );
+	pIndex += 1;
+	nBody_len += 1;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl( nTotal_len );
+
+	nRet = cmpServer->socketSend( nSocket, &packet, nTotal_len );
+	printPacket( power_port_state_response, STATUS_ROK, nSequence, nRet, "[Center]", mConfig.strLogPath.c_str(), nSocket );
+
+	char szLog[MAX_DATA_LEN];
+
+	if ( 0 >= nRet )
+	{
+		sprintf( szLog, "send power port state response fail , socket:%d", nSocket );
+	}
+	else
+	{
+		sprintf( szLog, "power port state:%s", szData );
+	}
+	printLog( szLog, "[Center]", mConfig.strLogPath.c_str() );
+	return nRet;
 }
 
 int CControlCenter::cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState)

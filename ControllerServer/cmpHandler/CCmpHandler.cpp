@@ -175,6 +175,22 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 					pBody += nStrLen;
 				}
 				break;
+			case power_port_state_request:
+				memset( temp, 0, sizeof(temp) );
+				memcpy( temp, pBody, 1 );
+				++pBody;
+				rData.setData( "wire", temp );
+
+				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
+				{
+					memset( temp, 0, sizeof(temp) );
+					strcpy( temp, pBody );
+					rData.setData( "controller", temp );
+					nStrLen = strlen( temp );
+					++nStrLen;
+					pBody += nStrLen;
+				}
+				break;
 		}
 	}
 	else
