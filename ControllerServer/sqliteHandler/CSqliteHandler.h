@@ -10,6 +10,8 @@
 #include <list>
 #include <string>
 
+#define COLUME_INDEX_CONTROLLER_SOCKETFD	2
+
 class sqlite3;
 
 class CSqliteHandler

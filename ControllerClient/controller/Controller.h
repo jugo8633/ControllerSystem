@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <list>
 #include "CObject.h"
 
 #define MAX_FUNC_POINT		256
@@ -27,6 +28,7 @@ class CSocketClient;
 class CAreawell;
 class CCmpHandler;
 class CSqliteHandler;
+class CThreadHandler;
 
 class Controller: public CObject
 {
@@ -38,6 +40,7 @@ class Controller: public CObject
 		int startServer();
 		void stopServer();
 		int connectCenter();
+		void runEnquireLinkRequest();
 
 	protected:
 		void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -53,6 +56,10 @@ class Controller: public CObject
 		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
+		void setUnbindState(int nSocketFD);
+		int cmpBindRequest(const int nSocket);
+		int getBindSocket(std::list<int> &listValue);
+		int cmpEnquireLinkRequest(const int nSocketFD);
 
 	private:
 		CONFIG mConfig;
@@ -61,6 +68,7 @@ class Controller: public CObject
 		CAreawell *areawell;
 		CCmpHandler *cmpParser;
 		CSqliteHandler *sqlite;
+		CThreadHandler *tdEnquireLink;
 		std::vector<int> vEnquireLink;
 
 		typedef int (Controller::*MemFn)(int, int, int, const void *);

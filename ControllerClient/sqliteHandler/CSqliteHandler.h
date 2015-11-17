@@ -28,7 +28,7 @@ class CSqliteHandler
 		int sqlExec(sqlite3 *db, const char *szSql);
 		int getColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue);
 		int getColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue, const char *szValue);
-		int getColumeValueInt(const char *szSql, std::list<int> &listValue, int nColumeIndex);
+		int getDeviceColumeValueInt(const char *szSql, std::list<int> &listValue, int nColumeIndex);
 		int insertUserData(std::string strMAC, std::string strAccount, std::string strPassword, std::string strToken);
 		int updateUserAccount(std::string strMAC, std::string strAccount);
 		bool getUserAuth(std::string strMAC);

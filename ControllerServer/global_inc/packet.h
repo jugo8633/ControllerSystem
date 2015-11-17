@@ -65,6 +65,8 @@ struct CMP_PACKET
 #define config_response								0x80000011
 #define power_port_request						0x00000012
 #define power_port_response					0x80000012
+#define power_port_state_request			0x00000013
+#define power_port_state_response		0x80000013
 
 /*
  * CMP status set
@@ -110,7 +112,7 @@ authentication_request, "authentication_request" )( authentication_response, "au
 		"access_log_response" )( enquire_link_request, "enquire_link_request" )( enquire_link_response, "enquire_link_response" )( unbind_request, "unbind_request" )(
 unbind_response, "unbind_response" )( update_request, "update_request" )( update_response, "update_response" )( reboot_request, "reboot_request" )( reboot_response,
 		"reboot_response" )( config_request, "config_request" )( config_response, "config_response" )( power_port_request, "power_port_request" )( power_port_response,
-		"power_port_response" );
+		"power_port_response" )( power_port_state_request, "power_port_state_request" )( power_port_state_response, "power_port_state_response" );
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error" )( STATUS_RINVMSGLEN, "Message Length is invalid" )( STATUS_RINVCMDLEN,
@@ -172,7 +174,7 @@ inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPa
 	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
 
 	char szLog[MAX_DATA_LEN];
-	sprintf( szLog, "%s-%s WMP : %-20s", mbstr, szDesc, szMsg );
+	sprintf( szLog, "%s-%s CMP : %-20s", mbstr, szDesc, szMsg );
 #ifdef DEBUG
 	printf("[DEBUG] %s\n" ,szLog);
 #else

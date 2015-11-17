@@ -233,7 +233,7 @@ int CSqliteHandler::getColumeValue(const char *szTable, const char *szColume, st
 	return row;
 }
 
-int CSqliteHandler::getColumeValueInt(const char *szSql, std::list<int> &listValue, int nColumeIndex)
+int CSqliteHandler::getDeviceColumeValueInt(const char *szSql, std::list<int> &listValue, int nColumeIndex)
 {
 	sqlite3_stmt * stmt;
 	int row = 0;

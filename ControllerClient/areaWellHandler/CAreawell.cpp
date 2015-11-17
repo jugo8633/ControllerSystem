@@ -216,7 +216,7 @@ void CAreawell::stopUdpServer()
 	}
 	udpsockfd = -1;
 }
-int CAreawell::sendCommand(std::string strIP, std::string strCommand)
+string CAreawell::sendCommand(std::string strIP, std::string strCommand)
 {
 	char buffer[BUFSIZE];
 	struct sockaddr_in dstaddr;
@@ -225,18 +225,18 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 	struct epoll_event ev;                     // Used for EPOLL.
 	struct epoll_event events[5];                // Used for EPOLL.
 	int noEvents;               // EPOLL event number.
-	int nResponse = -1;
 	string strCmd = strCommand;
+	string strRecv;
 
 	if ( strIP.empty() || strCommand.empty() )
 	{
-		return nResponse;
+		return strRecv;
 	}
 
 	if ( -1 == udpsockfd )
 	{
 		printf( "[Areawell] UDP Server Invalid!\n" );
-		return nResponse;
+		return strRecv;
 	}
 
 	dstaddr.sin_family = AF_INET;
@@ -244,7 +244,7 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 	if ( 1 != inet_pton( AF_INET, strIP.c_str(), &(dstaddr.sin_addr.s_addr) ) )
 	{
 		printf( "[Areawell] Client IP Invalid" );
-		return nResponse;
+		return strRecv;
 	}
 
 // Create epoll file descriptor.
@@ -258,7 +258,7 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 	if ( sendto( udpsockfd, strCommand.c_str(), strCommand.length(), 0, (struct sockaddr *) &dstaddr, sizeof(dstaddr) ) != -1 )
 	{
 		printf( "[Areawell] Sent Command: %s\n", strCommand.c_str() );
-		string strRecv;
+
 		for ( int i = 0 ; i < 3 ; ++i )
 		{
 			noEvents = epoll_wait( epfd, events, 5, 1000 );
@@ -269,7 +269,6 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 					memset( buffer, 0, BUFSIZE );
 					while ( recvfrom( udpsockfd, buffer, BUFSIZE, 0, (struct sockaddr *) &cliaddr, (socklen_t *) &cliaddr_len ) != -1 )
 					{
-						strRecv.empty();
 						strRecv = buffer;
 						printf( "[Areawell] %s Response:%s\n", inet_ntoa( cliaddr.sin_addr ), strRecv.c_str() );
 						break;
@@ -285,7 +284,17 @@ int CAreawell::sendCommand(std::string strIP, std::string strCommand)
 
 	close( epfd );
 
-	return nResponse;
+	return strRecv;
+}
+
+string CAreawell::getPortStatus(string strIP)
+{
+	string strRet;
+
+	startUdpServer();
+	strRet = sendCommand( strIP, STATE_PORT_GET );
+	stopUdpServer();
+	return strRet;
 }
 
 int CAreawell::setPortState(string strIP, bool bPort1, bool bPort2, bool bPort3, bool bPort4)

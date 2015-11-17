@@ -115,10 +115,16 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 	char szTmp[16];
 	int nTotalLen = 0;
 	int nBodyLen = 0;
+	int nCommand = generic_nack;
+	int nSequence = 0;
 
 	CMP_PACKET cmpPacket;
 	void* pHeader = &cmpPacket.cmpHeader;
 	void* pBody = &cmpPacket.cmpBody;
+
+	CMP_HEADER cmpHeader;
+	void *pHeaderResp = &cmpHeader;
+	int nCommandResp;
 
 	struct sockaddr_in *clientSockaddr;
 	clientSockaddr = new struct sockaddr_in;
@@ -131,6 +137,21 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 		if ( sizeof(CMP_HEADER) == result )
 		{
 			nTotalLen = ntohl( cmpPacket.cmpHeader.command_length );
+			nCommand = ntohl( cmpPacket.cmpHeader.command_id );
+			nSequence = ntohl( cmpPacket.cmpHeader.sequence_number );
+			if ( enquire_link_request == nCommand )
+			{
+				_DBG( "[Socket Server] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD );
+				memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+				nCommandResp = generic_nack | nCommand;
+				cmpHeader.command_id = htonl( nCommandResp );
+				cmpHeader.command_status = htonl( STATUS_ROK );
+				cmpHeader.sequence_number = htonl( nSequence );
+				cmpHeader.command_length = htonl( sizeof(CMP_HEADER) );
+				socketSend( nSocketFD, &cmpHeader, sizeof(CMP_HEADER) );
+				_DBG( "[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD );
+				continue;
+			}
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 			if ( 0 < nBodyLen )
