@@ -334,6 +334,7 @@ int CControlCenter::cmpPowerPortState(int nSocket, int nCommand, int nSequence, 
 		if ( 0 < nFD )
 		{
 			_DBG( "[Center] Get Socket FD:%d Controller ID:%s", nFD, rData["controller"].c_str() )
+
 			// sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
 			cmpPowerPortStateResponse( nSocket, nSequence, "{\"count\":1,\"wires\":[{\"wire\":1,\"state\": \"1111\"}]}" );
 		}
