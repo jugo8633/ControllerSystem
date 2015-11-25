@@ -80,6 +80,7 @@ struct CMP_PACKET
 #define STATUS_RSYSERR								0x00000008		//System Error
 #define STATUS_RBINDFAIL							0x00000010		//Bind Failed
 #define STATUS_RPPSFAIL							0x00000011		//Power Port Setting Fail
+#define STATUS_RPPSTAFAIL						0x00000012	//Get Power State Fail
 #define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
 

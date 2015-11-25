@@ -53,6 +53,7 @@ class CControlCenter: public CObject
 
 		/** Send CMP Request **/
 		int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
+		int cmpPowerPortStateRequest(int nSocket, std::string strWire);
 
 		/** Send CMP Response **/
 		int cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData);

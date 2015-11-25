@@ -334,9 +334,15 @@ int CControlCenter::cmpPowerPortState(int nSocket, int nCommand, int nSequence, 
 		if ( 0 < nFD )
 		{
 			_DBG( "[Center] Get Socket FD:%d Controller ID:%s", nFD, rData["controller"].c_str() )
-
-			// sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
-			cmpPowerPortStateResponse( nSocket, nSequence, "{\"count\":1,\"wires\":[{\"wire\":1,\"state\": \"1111\"}]}" );
+			if ( 0 < cmpPowerPortStateRequest( nFD, rData["wire"] ) )
+			{
+				cmpPowerPortStateResponse( nSocket, nSequence, "{\"count\":1,\"wires\":[{\"wire\":1,\"state\": \"1111\"}]}" );
+			}
+			else
+			{
+				sendCommand( nSocket, nCommand, STATUS_RPPSTAFAIL, nSequence, true );
+				_DBG( "[Center] Get Power Port State Fail Controller ID:%s", rData["controller"].c_str() )
+			}
 		}
 		else
 		{
@@ -427,6 +433,34 @@ int CControlCenter::cmpPowerPortRequest(int nSocket, std::string strWire, std::s
 	nRet = cmpServer->socketSend( nSocket, &packet, nTotal_len );
 
 	string strMsg = "Power Port Request to SocketFD:" + ConvertToString( nSocket );
+	printLog( strMsg, "[Center]", mConfig.strLogPath );
+	return nRet;
+}
+
+int CControlCenter::cmpPowerPortStateRequest(int nSocket, std::string strWire)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset( &packet, 0, sizeof(CMP_PACKET) );
+
+	cmpParser->formatHeader( power_port_state_request, STATUS_ROK, getSequence(), &pHeader );
+
+	memcpy( pIndex, strWire.c_str(), 1 ); // wire
+	++pIndex;
+	++nBody_len;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl( nTotal_len );
+
+	nRet = cmpServer->socketSend( nSocket, &packet, nTotal_len );
+
+	string strMsg = "Power Port State Request to SocketFD:" + ConvertToString( nSocket );
 	printLog( strMsg, "[Center]", mConfig.strLogPath );
 	return nRet;
 }

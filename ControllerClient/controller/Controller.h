@@ -56,10 +56,15 @@ class Controller: public CObject
 		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
 		void setUnbindState(int nSocketFD);
+
+		/** Send Request to Control Center **/
 		int cmpBindRequest(const int nSocket);
-		int getBindSocket(std::list<int> &listValue);
 		int cmpEnquireLinkRequest(const int nSocketFD);
+		int cmpAccessLogRequest(const int nSocketFD, std::string strType, std::string strLog);
+
+		int getBindSocket(std::list<int> &listValue);
 
 	private:
 		CONFIG mConfig;

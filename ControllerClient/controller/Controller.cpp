@@ -52,6 +52,7 @@ Controller::Controller() :
 	cmpRequest[bind_request] = &Controller::cmpBind;
 	cmpRequest[unbind_request] = &Controller::cmpUnbind;
 	cmpRequest[power_port_request] = &Controller::cmpPowerPort;
+	cmpRequest[access_log_request] = &Controller::cmpAccessLog;
 
 	mapWire.insert( std::make_pair( "1", "192.168.0.111" ) );
 	mapWire.insert( std::make_pair( "2", "192.168.0.112" ) );
@@ -302,6 +303,42 @@ int Controller::cmpBindRequest(const int nSocket)
 	return nRet;
 }
 
+int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, std::string strLog)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset( &packet, 0, sizeof(CMP_PACKET) );
+
+	cmpParser->formatHeader( access_log_request, STATUS_ROK, getSequence(), &pHeader );
+
+	memcpy( pIndex, strType.c_str(), strType.length() );
+	pIndex += strType.length();
+	nBody_len += strType.length();
+
+	memcpy( pIndex, strLog.c_str(), strLog.length() );
+	pIndex += strLog.length();
+	nBody_len += strLog.length();
+
+	memcpy( pIndex, "\0", 1 );
+	++pIndex;
+	++nBody_len;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl( nTotal_len );
+
+	nRet = cmpClient->socketSend( nSocketFD, &packet, nTotal_len );
+
+	string strMsg = "Access Log to Center Controller ID:" + mConfig.strMAC;
+	printLog( strMsg, "[Controller]", mConfig.strLogPath );
+	return nRet;
+}
+
 int Controller::sendCommandtoClient(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)
 {
 	int nRet = -1;
@@ -481,6 +518,28 @@ int Controller::cmpPowerPort(int nSocket, int nCommand, int nSequence, const voi
 	}
 	rData.clear();
 
+	return 0;
+}
+
+int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "log" ) )
+	{
+		_DBG( "[Controller] Access Log Type:%s Log:%s FD:%d", rData["type"].c_str(), rData["log"].c_str(), nSocket )
+		sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		if ( 0 >= cmpAccessLogRequest( cmpClient->getSocketfd(), rData["type"], rData["log"] ) )
+		{
+			_DBG( "[Controller] Access Log Send to Center Fail" )
+		}
+	}
+	else
+	{
+		_DBG( "[Controller] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket )
+		sendCommandtoClient( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+	}
+	rData.clear();
 	return 0;
 }
 
