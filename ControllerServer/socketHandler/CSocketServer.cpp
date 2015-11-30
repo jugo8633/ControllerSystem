@@ -292,10 +292,14 @@ int CSocketServer::runSMSHandler(int nClientFD)
 		}
 		else
 		{
+			socketSend( nClientFD, "Control Center: Please use CMP to communicate\r\n", strlen( "Control Center: Please use CMP to communicate\r\n" ) );
+			_DBG( "[Socket Server] Send Message: Please use CMP to communicate" )
+
 			if ( externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect )
 			{
 				sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0 );
 			}
+
 			socketClose( nClientFD );
 			_DBG( "[Socket Server] socket close client: %d , packet header length error: %d", nClientFD, result );
 			break;
