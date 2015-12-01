@@ -1,7 +1,7 @@
 #####################################
-# Wireless Manager Server make file
-# Created on: Dec 02,2014
-# Author: jugo
+# Control Center make file
+# Created on: Nor 02,2015
+# Author: Louis Ju
 #####################################
 
 include env.mk
@@ -29,6 +29,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lboost_thread \
 			-lboost_system \
 			-lboost_filesystem \
+			-lboost_regex \
 			-lsqlite3
 			
 vpath %.cpp $(SRC_DIR)
@@ -101,8 +102,9 @@ package-u:
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	
 mongoDB:
-	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons;
-	@mv $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/linux2/normal/libmongoclient.a $(DIR_APP_ROOT)/libs/libmongoclient.a
+	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install;
+	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
+	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

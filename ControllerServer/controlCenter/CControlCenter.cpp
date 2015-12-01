@@ -16,6 +16,7 @@
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
+#include "CMongoDBHandler.h"
 
 using namespace std;
 
@@ -34,7 +35,8 @@ static int getSequence()
 void *threadEnquireLinkRequest(void *argv);
 
 CControlCenter::CControlCenter() :
-		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler )
+		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler ), mongodb(
+				CMongoDBHandler::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -101,6 +103,9 @@ int CControlCenter::init(std::string strConf)
 		return FALSE;
 	}
 	_DBG( "[Center] Open Sqlite DB controller Success" )
+
+	/** Connect Mongodb **/
+	mongodb->connectDB();
 
 	return TRUE;
 }

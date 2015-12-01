@@ -24,6 +24,7 @@ class CSocketServer;
 class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
+class CMongoDBHandler;
 
 class CControlCenter: public CObject
 {
@@ -68,6 +69,7 @@ class CControlCenter: public CObject
 		CCmpHandler *cmpParser;
 		CSqliteHandler *sqlite;
 		CThreadHandler *tdEnquireLink;
+		CMongoDBHandler *mongodb;
 		std::vector<int> vEnquireLink;
 
 		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);

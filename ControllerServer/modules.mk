@@ -8,7 +8,8 @@ export MODULES=global_inc \
 			 threadHandler	\
 			 dataHandler	\
 			 cmpHandler	\
-			 sqliteHandler
+			 sqliteHandler	\
+			 mongoDBHandler
 			
 			 
-export EXT_MODULES=extLibs/mongo-cxx-driver
+export EXT_MODULES=extInclude
