@@ -25,6 +25,7 @@ class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
 class CMongoDBHandler;
+class CJsonHandler;
 
 class CControlCenter: public CObject
 {
@@ -71,6 +72,7 @@ class CControlCenter: public CObject
 		CSqliteHandler *sqlite;
 		CThreadHandler *tdEnquireLink;
 		CMongoDBHandler *mongodb;
+		CJsonHandler *json;
 		std::vector<int> vEnquireLink;
 
 		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);

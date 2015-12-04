@@ -9,7 +9,8 @@ export MODULES=global_inc \
 			 dataHandler	\
 			 cmpHandler	\
 			 sqliteHandler	\
-			 mongoDBHandler
+			 mongoDBHandler \
+			 jsonHandler
 			
 			 
 export EXT_MODULES=extInclude \
