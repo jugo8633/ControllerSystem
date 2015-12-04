@@ -12,4 +12,5 @@ export MODULES=global_inc \
 			 mongoDBHandler
 			
 			 
-export EXT_MODULES=extInclude
+export EXT_MODULES=extInclude \
+			extLibs/json-c

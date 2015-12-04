@@ -104,9 +104,7 @@ int CControlCenter::init(std::string strConf)
 	}
 	_DBG( "[Center] Open Sqlite DB controller Success" )
 
-	/** Connect Mongodb **/
-	mongodb->connectDB();
-
+	mongodb->connectDB( "127.0.0.1", "27017" );
 	return TRUE;
 }
 
@@ -556,6 +554,27 @@ int CControlCenter::getBindSocket(list<int> &listValue)
 {
 	string strSql = "SELECT socket_fd FROM controller WHERE status = 1;";
 	return sqlite->getControllerColumeValueInt( strSql.c_str(), listValue, 0 );
+}
+
+int CControlCenter::saveAccessLog(std::string strJSON)
+{
+
+	/* Save access log into mongodb */
+	/*	map<string, string> mapData;
+	 mapData.insert( pair<string, string>( DEVICE_ID, strDeviceMAC ) );
+	 mapData.insert( pair<string, string>( CLIENT_MAC, strClientMAC ) );
+	 mapData.insert( pair<string, string>( DEST_ADDR, strAddress ) );
+	 mapData.insert( pair<string, string>( DEST_PORT, strPort ) );
+	 mapData.insert( pair<string, string>( URL, strURL ) );
+
+	 time_t t = time( NULL );
+	 char mbstr[24];
+	 strftime( mbstr, 24, "%Y-%m-%d %H:%M:%S", std::localtime( &t ) );
+	 mapData.insert( pair<string, string>( "date", mbstr ) );
+
+	 wmDB->insert( mstrMDBName, mstrMCollection, mapData );
+	 mapData.clear();*/
+	return 0;
 }
 
 /************************************* thread function **************************************/

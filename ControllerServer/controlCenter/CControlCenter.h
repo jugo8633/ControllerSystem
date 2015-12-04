@@ -62,6 +62,7 @@ class CControlCenter: public CObject
 		int getControllerSocketFD(std::string strControllerID);
 		int getBindSocket(std::list<int> &listValue);
 		int cmpEnquireLinkRequest(const int nSocketFD);
+		int saveAccessLog(std::string strJSON);
 
 	private:
 		CONFIG mConfig;

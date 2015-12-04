@@ -30,7 +30,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lboost_system \
 			-lboost_filesystem \
 			-lboost_regex \
-			-lsqlite3
+			-lsqlite3 \
+			-ljson-c
 			
 vpath %.cpp $(SRC_DIR)
 
@@ -43,7 +44,7 @@ endef
 
 .IGNORE: clean
 
-all: checkdirs package-u mongoDB lib bin/$(TARGET)
+all: checkdirs package-u json mongoDB lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)center.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
@@ -99,6 +100,7 @@ package-u:
 	apt-get -y install sqlite3 libsqlite3-dev
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
+	apt-get -y install autoconf automake libtool
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	
 mongoDB:
@@ -106,5 +108,9 @@ mongoDB:
 	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
 	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
+	
+json:
+	@cd $(DIR_APP_ROOT)extLibs/json-c && sh autogen.sh && ./configure && make;
+	@cp $(DIR_APP_ROOT)extLibs/json-c/.libs/libjson-c.a $(DIR_APP_ROOT)libs/libjson-c.a
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

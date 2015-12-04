@@ -23,10 +23,21 @@ using namespace std;
 using namespace mongo;
 
 CMongoDBHandler* CMongoDBHandler::mInstance = 0;
+static DBClientConnection *DBconn;
 
-CMongoDBHandler::CMongoDBHandler()
+CMongoDBHandler::CMongoDBHandler() :
+		mbInited( false )
 {
-
+	client::GlobalInstance instance;
+	if ( !instance.initialized() )
+	{
+		std::cout << "failed to initialize the client driver: " << instance.status() << std::endl;
+		_DBG( "[Mongodb] Initialized Mongodb Fail" )
+		return;
+	}
+	_DBG( "[Mongodb] Initialized Mongodb Client Driver Success" )
+	DBconn = new DBClientConnection();
+	mbInited = true;
 }
 CMongoDBHandler::~CMongoDBHandler()
 {
@@ -45,13 +56,6 @@ CMongoDBHandler* CMongoDBHandler::getInstance()
 
 int CMongoDBHandler::connectDB()
 {
-	mongo::client::GlobalInstance instance;
-	if ( !instance.initialized() )
-	{
-		std::cout << "failed to initialize the client driver: " << instance.status() << std::endl;
-		return EXIT_FAILURE;
-	}
-
 	string uri = "mongodb://localhost:27017";
 	string errmsg;
 
@@ -75,30 +79,47 @@ int CMongoDBHandler::connectDB()
 
 	return EXIT_SUCCESS;
 }
+int CMongoDBHandler::connectDB(string strIP, string strPort)
+{
+	string errmsg;
+	int nRet = FALSE;
+
+	if ( !DBconn->connect( strIP + ":" + strPort, errmsg ) )
+	{
+		_DBG( "[MongoDB] DB Connect Fail! , Error: %s", errmsg.c_str() );
+	}
+	else
+	{
+		nRet = TRUE;
+		_DBG( "[MongoDB] DB Connected" );
+	}
+
+	return nRet;
+}
 
 int CMongoDBHandler::connectDB(std::string strIP, std::string strPort, std::string strDBName, std::string strUser, std::string strPasswd)
 {
 	string strErrMsg;
 	int nRet = FALSE;
-	/*
-	 if ( !DBconn.connect( strIP + ":" + strPort, strErrMsg ) )
-	 {
-	 _DBG( "[MongoDB] Couldn't connect:%s", strErrMsg.c_str() );
-	 }
-	 else
-	 {
-	 bool ok = DBconn.auth( strDBName, strUser, strPasswd, strErrMsg );
-	 if ( !ok )
-	 {
-	 _DBG( "[MongoDB] %s", strErrMsg.c_str() );
-	 }
-	 else
-	 {
-	 nRet = TRUE;
-	 _DBG( "[MongoDB] DB Connected , DB:%s User:%s Password:%s ErrorMsg:%s", strDBName.c_str(), strUser.c_str(), strPasswd.c_str(), strErrMsg.c_str() );
-	 }
-	 }
-	 */
+
+	if ( !DBconn->connect( strIP + ":" + strPort, strErrMsg ) )
+	{
+		_DBG( "[MongoDB] Couldn't connect:%s", strErrMsg.c_str() );
+	}
+	else
+	{
+		bool ok = DBconn->auth( strDBName, strUser, strPasswd, strErrMsg );
+		if ( !ok )
+		{
+			_DBG( "[MongoDB] %s", strErrMsg.c_str() );
+		}
+		else
+		{
+			nRet = TRUE;
+			_DBG( "[MongoDB] DB Connected , DB:%s User:%s Password:%s ErrorMsg:%s", strDBName.c_str(), strUser.c_str(), strPasswd.c_str(), strErrMsg.c_str() );
+		}
+	}
+
 	return nRet;
 }
 
@@ -116,7 +137,7 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 	}
 
 	BSONObj p = b.obj();
-	//DBconn.insert( strCon, p );
+	DBconn->insert( strCon, p );
 }
 
 void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::string strColumn, std::string strValue)
@@ -127,12 +148,11 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 	string strCon = strDB + "." + strCollection;
 	BSONObjBuilder b;
 	BSONObj p = b.append( strColumn, strValue ).obj();
-//	DBconn.insert( strCon, p );
+	DBconn->insert( strCon, p );
 }
 
 bool CMongoDBHandler::isValid()
 {
-	//return !DBconn.isFailed();
-	return false;
+	return !DBconn->isFailed();
 }
 
