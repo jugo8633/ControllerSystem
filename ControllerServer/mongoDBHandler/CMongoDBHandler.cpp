@@ -151,6 +151,17 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 	DBconn->insert( strCon, p );
 }
 
+void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::string strJSON)
+{
+	if ( !isValid() )
+		return;
+
+	string strCon = strDB + "." + strCollection;
+	BSONObj bson = mongo::fromjson( strJSON );
+	DBconn->insert( strCon, bson );
+	_DBG( "[Mongodb] Insert Data to :%s Data:%s", strCon.c_str(), strJSON.c_str() )
+}
+
 bool CMongoDBHandler::isValid()
 {
 	return !DBconn->isFailed();

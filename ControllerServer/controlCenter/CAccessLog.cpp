@@ -95,7 +95,7 @@ int CAccessLog::insertLog(const int nType, string strData)
 	switch ( nType )
 	{
 		case TYPE_ACCESS_LOG_MOBILE:
-			insertMobileLog( strData );
+			mongodb->insert( "access", "mobile", strData );
 			break;
 		case TYPE_ACCESS_LOG_POWER_STATION:
 			insertPowerStationLog( strData );

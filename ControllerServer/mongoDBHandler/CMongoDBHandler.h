@@ -18,6 +18,7 @@ class CMongoDBHandler
 		int connectDB(std::string strIP, std::string strPort, std::string strDBName, std::string strUser, std::string strPasswd);
 		void insert(std::string strDB, std::string strCollection, std::map<std::string, std::string> &mapData);
 		void insert(std::string strDB, std::string strCollection, std::string strColumn, std::string strValue);
+		void insert(std::string strDB,std::string strCollection, std::string strJSON);
 		bool isValid();
 
 	private:
