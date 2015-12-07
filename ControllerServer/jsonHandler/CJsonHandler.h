@@ -9,6 +9,7 @@
 
 #include <string>
 #include <map>
+#include <json.h>
 
 class CJsonHandler
 {

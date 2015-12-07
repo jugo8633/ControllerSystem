@@ -26,6 +26,7 @@ class CSqliteHandler;
 class CThreadHandler;
 class CMongoDBHandler;
 class CJsonHandler;
+class CAccessLog;
 
 class CControlCenter: public CObject
 {
@@ -52,6 +53,7 @@ class CControlCenter: public CObject
 		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
 
 		/** Send CMP Request **/
 		int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
@@ -63,7 +65,6 @@ class CControlCenter: public CObject
 		int getControllerSocketFD(std::string strControllerID);
 		int getBindSocket(std::list<int> &listValue);
 		int cmpEnquireLinkRequest(const int nSocketFD);
-		int saveAccessLog(std::string strJSON);
 
 	private:
 		CONFIG mConfig;
@@ -72,7 +73,7 @@ class CControlCenter: public CObject
 		CSqliteHandler *sqlite;
 		CThreadHandler *tdEnquireLink;
 		CMongoDBHandler *mongodb;
-		CJsonHandler *json;
+		CAccessLog *accessLog;
 		std::vector<int> vEnquireLink;
 
 		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);

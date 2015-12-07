@@ -14,6 +14,8 @@
 #include <ctime>
 #include <iostream>
 #include <map>
+#include <string.h>
+#include <stdlib.h>
 
 using namespace std;
 /*
@@ -47,7 +49,7 @@ struct CMP_PACKET
  * 	CMP Command set
  */
 #define generic_nack										0x80000000
-#define bind_request									0x00000001
+#define bind_request										0x00000001
 #define bind_response									0x80000001
 #define authentication_request					0x00000002
 #define authentication_response				0x80000002
@@ -56,33 +58,39 @@ struct CMP_PACKET
 #define enquire_link_request						0x00000015
 #define enquire_link_response					0x80000015
 #define unbind_request								0x00000006
-#define unbind_response							0x80000006
+#define unbind_response								0x80000006
 #define update_request								0x00000007
-#define update_response							0x80000007
-#define reboot_request								0x00000010
+#define update_response								0x80000007
+#define reboot_request									0x00000010
 #define reboot_response								0x80000010
 #define config_request									0x00000011
 #define config_response								0x80000011
 #define power_port_request						0x00000012
-#define power_port_response					0x80000012
-#define power_port_state_request			0x00000013
-#define power_port_state_response		0x80000013
+#define power_port_response						0x80000012
+#define power_port_state_request				0x00000013
+#define power_port_state_response			0x80000013
 
 /*
  * CMP status set
  */
 #define STATUS_ROK										0x00000000		//No Error
-#define STATUS_RINVMSGLEN					0x00000001		//Message Length is invalid
-#define STATUS_RINVCMDLEN					0x00000002		//Command Length is invalid
+#define STATUS_RINVMSGLEN						0x00000001		//Message Length is invalid
+#define STATUS_RINVCMDLEN						0x00000002		//Command Length is invalid
 #define STATUS_RINVCMDID						0x00000003		//Invalid Command ID
-#define STATUS_RINVBNDSTS					0x00000004		//Incorrect BIND Status for given command
-#define STATUS_RALYBND							0x00000005		//Already in Bound State
+#define STATUS_RINVBNDSTS						0x00000004		//Incorrect BIND Status for given command
+#define STATUS_RALYBND								0x00000005		//Already in Bound State
 #define STATUS_RSYSERR								0x00000008		//System Error
 #define STATUS_RBINDFAIL							0x00000010		//Bind Failed
-#define STATUS_RPPSFAIL							0x00000011		//Power Port Setting Fail
-#define STATUS_RPPSTAFAIL						0x00000012	//Get Power State Fail
+#define STATUS_RPPSFAIL								0x00000011		//Power Port Setting Fail
+#define STATUS_RPPSTAFAIL							0x00000012	//Get Power State Fail
 #define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
+
+/*
+ *  Access log
+ */
+#define TYPE_ACCESS_LOG_MOBILE					1
+#define TYPE_ACCESS_LOG_POWER_STATION	2
 
 template<typename T, typename U>
 class create_map

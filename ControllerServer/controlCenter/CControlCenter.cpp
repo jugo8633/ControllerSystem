@@ -17,7 +17,7 @@
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
 #include "CMongoDBHandler.h"
-#include "CJsonHandler.h"
+#include "CAccessLog.h"
 
 using namespace std;
 
@@ -37,7 +37,7 @@ void *threadEnquireLinkRequest(void *argv);
 
 CControlCenter::CControlCenter() :
 		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler ), mongodb(
-				CMongoDBHandler::getInstance() ), json( CJsonHandler::getInstance() )
+				CMongoDBHandler::getInstance() ), accessLog( CAccessLog::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -47,6 +47,7 @@ CControlCenter::CControlCenter() :
 	cmpRequest[unbind_request] = &CControlCenter::cmpUnbind;
 	cmpRequest[power_port_request] = &CControlCenter::cmpPowerPort;
 	cmpRequest[power_port_state_request] = &CControlCenter::cmpPowerPortState;
+	cmpRequest[access_log_request] = &CControlCenter::cmpAccessLog;
 }
 
 CControlCenter::~CControlCenter()
@@ -364,6 +365,26 @@ int CControlCenter::cmpPowerPortState(int nSocket, int nCommand, int nSequence, 
 	return 0;
 }
 
+int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
+	{
+		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		int nType = -1;
+		convertFromString( nType, rData["type"] );
+		accessLog->insertLog( nType, rData["data"] );
+	}
+	else
+	{
+		_DBG( "[Center] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket )
+		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+	}
+	rData.clear();
+	return 0;
+}
+
 int CControlCenter::cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData)
 {
 	int nRet = -1;
@@ -555,27 +576,6 @@ int CControlCenter::getBindSocket(list<int> &listValue)
 {
 	string strSql = "SELECT socket_fd FROM controller WHERE status = 1;";
 	return sqlite->getControllerColumeValueInt( strSql.c_str(), listValue, 0 );
-}
-
-int CControlCenter::saveAccessLog(std::string strJSON)
-{
-
-	/* Save access log into mongodb */
-	/*	map<string, string> mapData;
-	 mapData.insert( pair<string, string>( DEVICE_ID, strDeviceMAC ) );
-	 mapData.insert( pair<string, string>( CLIENT_MAC, strClientMAC ) );
-	 mapData.insert( pair<string, string>( DEST_ADDR, strAddress ) );
-	 mapData.insert( pair<string, string>( DEST_PORT, strPort ) );
-	 mapData.insert( pair<string, string>( URL, strURL ) );
-
-	 time_t t = time( NULL );
-	 char mbstr[24];
-	 strftime( mbstr, 24, "%Y-%m-%d %H:%M:%S", std::localtime( &t ) );
-	 mapData.insert( pair<string, string>( "date", mbstr ) );
-
-	 wmDB->insert( mstrMDBName, mstrMCollection, mapData );
-	 mapData.clear();*/
-	return 0;
 }
 
 /************************************* thread function **************************************/
