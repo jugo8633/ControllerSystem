@@ -525,11 +525,11 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
-	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "log" ) )
+	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
 	{
-		_DBG( "[Controller] Access Log Type:%s Log:%s FD:%d", rData["type"].c_str(), rData["log"].c_str(), nSocket )
+		_DBG( "[Controller] Access Log Type:%s Data:%s FD:%d", rData["type"].c_str(), rData["data"].c_str(), nSocket )
 		sendCommandtoClient( nSocket, nCommand, STATUS_ROK, nSequence, true );
-		if ( 0 >= cmpAccessLogRequest( cmpClient->getSocketfd(), rData["type"], rData["log"] ) )
+		if ( 0 >= cmpAccessLogRequest( cmpClient->getSocketfd(), rData["type"], rData["data"] ) )
 		{
 			_DBG( "[Controller] Access Log Send to Center Fail" )
 		}

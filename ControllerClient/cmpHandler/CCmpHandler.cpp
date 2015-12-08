@@ -180,7 +180,7 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				{
 					memset( temp, 0, sizeof(temp) );
 					strcpy( temp, pBody );
-					rData.setData( "log", temp );
+					rData.setData( "data", temp );
 					nStrLen = strlen( temp );
 					++nStrLen;
 					pBody += nStrLen;

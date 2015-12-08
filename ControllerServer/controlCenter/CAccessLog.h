@@ -19,6 +19,5 @@ class CAccessLog
 
 	private:
 		explicit CAccessLog();
-		 void insertMobileLog(std::string strData);
 		CMongoDBHandler *mongodb;
 };

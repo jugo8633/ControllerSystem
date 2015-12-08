@@ -30,8 +30,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lboost_system \
 			-lboost_filesystem \
 			-lboost_regex \
-			-lsqlite3 \
-			-ljson-c
+			-lsqlite3
 			
 vpath %.cpp $(SRC_DIR)
 
@@ -44,7 +43,7 @@ endef
 
 .IGNORE: clean
 
-all: checkdirs package-u json mongoDB lib bin/$(TARGET)
+all: checkdirs package-u mongoDB lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)center.conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 
@@ -108,9 +107,5 @@ mongoDB:
 	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
 	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
-	
-json:
-	@cd $(DIR_APP_ROOT)extLibs/json-c && sh autogen.sh && ./configure && make;
-	@cp $(DIR_APP_ROOT)extLibs/json-c/.libs/libjson-c.a $(DIR_APP_ROOT)libs/libjson-c.a
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

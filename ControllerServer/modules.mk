@@ -9,9 +9,7 @@ export MODULES=global_inc \
 			 dataHandler	\
 			 cmpHandler	\
 			 sqliteHandler	\
-			 mongoDBHandler \
-			 jsonHandler
+			 mongoDBHandler
 			
 			 
-export EXT_MODULES=extInclude \
-			extLibs/json-c
+export EXT_MODULES=extInclude
