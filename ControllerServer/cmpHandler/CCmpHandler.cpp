@@ -9,6 +9,7 @@
 
 #include <string.h>
 
+#include "utility.h"
 #include "common.h"
 #include "packet.h"
 #include "CDataHandler.cpp"
@@ -206,6 +207,16 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 					++nStrLen;
 					pBody += nStrLen;
 				}
+				break;
+			case initial_request:
+			{
+				int *pType;
+				int nType = 0;
+				pType = (int*) pBody;
+				nType = ntohl( *pType );
+				rData.setData( "type", ConvertToString( nType ) );
+				pBody += 4;
+			}
 				break;
 		}
 	}

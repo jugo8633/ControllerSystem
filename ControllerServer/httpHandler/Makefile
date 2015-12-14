@@ -13,7 +13,7 @@ BUILD_DIR := $(DIR_APP_ROOT)
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)*.c*))
 OBJ       := $(patsubst %.cpp, %.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I../global_inc
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG
 			
 vpath %.cpp $(SRC_DIR)
 

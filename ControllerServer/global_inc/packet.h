@@ -55,6 +55,10 @@ struct CMP_PACKET
 #define authentication_response				0x80000002
 #define access_log_request							0x00000003
 #define access_log_response						0x80000003
+#define initial_request									0x00000004
+#define initial_response								0x80000004
+#define sign_up_request								0x00000005
+#define sign_up_response								0x80000005
 #define enquire_link_request						0x00000015
 #define enquire_link_response					0x80000015
 #define unbind_request								0x00000006
@@ -87,10 +91,10 @@ struct CMP_PACKET
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
 
 /*
- *  Access log
+ * Service Type
  */
-#define TYPE_ACCESS_LOG_MOBILE					1
-#define TYPE_ACCESS_LOG_POWER_STATION	2
+#define TYPE_MOBILE					1
+#define TYPE_POWER_STATION	2
 
 template<typename T, typename U>
 class create_map
@@ -121,7 +125,8 @@ authentication_request, "authentication_request" )( authentication_response, "au
 		"access_log_response" )( enquire_link_request, "enquire_link_request" )( enquire_link_response, "enquire_link_response" )( unbind_request, "unbind_request" )(
 unbind_response, "unbind_response" )( update_request, "update_request" )( update_response, "update_response" )( reboot_request, "reboot_request" )( reboot_response,
 		"reboot_response" )( config_request, "config_request" )( config_response, "config_response" )( power_port_request, "power_port_request" )( power_port_response,
-		"power_port_response" )( power_port_state_request, "power_port_state_request" )( power_port_state_response, "power_port_state_response" );
+		"power_port_response" )( power_port_state_request, "power_port_state_request" )( power_port_state_response, "power_port_state_response" )( initial_request,
+		"initial_request" )( initial_response, "initial_response" )( sign_up_request, "sign_up_request" )( sign_up_response, "sign_up_response" );
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error" )( STATUS_RINVMSGLEN, "Message Length is invalid" )( STATUS_RINVCMDLEN,

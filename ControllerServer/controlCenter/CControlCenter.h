@@ -54,6 +54,7 @@ class CControlCenter: public CObject
 		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
 
 		/** Send CMP Request **/
 		int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
@@ -61,6 +62,7 @@ class CControlCenter: public CObject
 
 		/** Send CMP Response **/
 		int cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData);
+		int cmpInitialResponse(int nSocket, int nSequence, const char * szData);
 
 		int getControllerSocketFD(std::string strControllerID);
 		int getBindSocket(std::list<int> &listValue);

@@ -39,10 +39,10 @@ int CAccessLog::insertLog(const int nType, string strData)
 {
 	switch ( nType )
 	{
-		case TYPE_ACCESS_LOG_MOBILE:
+		case TYPE_MOBILE:
 			mongodb->insert( "access", "mobile", strData );
 			break;
-		case TYPE_ACCESS_LOG_POWER_STATION:
+		case TYPE_POWER_STATION:
 			mongodb->insert( "access", "power", strData );
 			break;
 	}

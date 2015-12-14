@@ -18,6 +18,7 @@
 #include "CThreadHandler.h"
 #include "CMongoDBHandler.h"
 #include "CAccessLog.h"
+#include "CInitial.h"
 
 using namespace std;
 
@@ -48,6 +49,7 @@ CControlCenter::CControlCenter() :
 	cmpRequest[power_port_request] = &CControlCenter::cmpPowerPort;
 	cmpRequest[power_port_state_request] = &CControlCenter::cmpPowerPortState;
 	cmpRequest[access_log_request] = &CControlCenter::cmpAccessLog;
+	cmpRequest[initial_request] = &CControlCenter::cmpInitial;
 }
 
 CControlCenter::~CControlCenter()
@@ -385,6 +387,37 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 	return 0;
 }
 
+int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet && rData.isValidKey( "type" ) )
+	{
+		_DBG( "[Center] Get Initial request, type:%s", rData["type"].c_str() )
+		CInitial *init = new CInitial();
+		int nType = 0;
+		convertFromString( nType, rData["type"] );
+		string strData = init->getInitData( nType );
+		if ( strData.empty() )
+		{
+			_DBG( "[Center] Initial Fail, Can't get initial data Socket FD:%d", nSocket )
+			sendCommand( nSocket, nCommand, STATUS_RSYSERR, nSequence, true );
+		}
+		else
+		{
+			cmpInitialResponse( nSocket, nSequence, strData.c_str() );
+		}
+		delete init;
+	}
+	else
+	{
+		_DBG( "[Center] Initial Fail, Invalid Body Parameters Socket FD:%d", nSocket )
+		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+	}
+	rData.clear();
+	return nRet;
+}
+
 int CControlCenter::cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData)
 {
 	int nRet = -1;
@@ -423,6 +456,46 @@ int CControlCenter::cmpPowerPortStateResponse(int nSocket, int nSequence, const 
 		sprintf( szLog, "power port state:%s", szData );
 	}
 	printLog( szLog, "[Center]", mConfig.strLogPath.c_str() );
+	return nRet;
+}
+
+int CControlCenter::cmpInitialResponse(int nSocket, int nSequence, const char * szData)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset( &packet, 0, sizeof(CMP_PACKET) );
+
+	cmpParser->formatHeader( initial_response, STATUS_ROK, nSequence, &pHeader );
+	memcpy( pIndex, szData, strlen( szData ) );
+	pIndex += strlen( szData );
+	nBody_len += strlen( szData );
+	memcpy( pIndex, "\0", 1 );
+	pIndex += 1;
+	nBody_len += 1;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl( nTotal_len );
+
+	nRet = cmpServer->socketSend( nSocket, &packet, nTotal_len );
+	printPacket( initial_response, STATUS_ROK, nSequence, nRet, "[Center]", mConfig.strLogPath.c_str(), nSocket );
+
+	string strLog;
+	if ( 0 >= nRet )
+	{
+		strLog = "Send Initial response fail, socket:" + ConvertToString( nSocket );
+	}
+	else
+	{
+		strLog = "Send Initial response success, data:" + ConvertToString( szData );
+	}
+	printLog( strLog.c_str(), "[Center]", mConfig.strLogPath.c_str() );
+
 	return nRet;
 }
 
