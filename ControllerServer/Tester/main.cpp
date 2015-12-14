@@ -8,6 +8,8 @@
 #include "common.h"
 #include "CCmpTest.h"
 
+#define CENTER_IP "54.199.198.94"
+//#define CENTER_IP "127.0.0.1" // test
 #define TEST_CMP		1
 
 /**
@@ -42,7 +44,7 @@ void testCMP()
 {
 	_DBG( "CMP Testing.............." )
 	CCmpTest *cmpTest = new CCmpTest();
-	cmpTest->connectCenter( "127.0.0.1", 6607 );
+	cmpTest->connectCenter( CENTER_IP, 6607 );
 	cmpTest->cmpInitialRequest();
 	delete cmpTest;
 }
