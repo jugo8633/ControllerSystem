@@ -280,6 +280,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				result = socketrecv( nClientFD, nBodyLen, &pBody, clientSockaddr );
 				if ( result != nBodyLen )
 				{
+					socketSend( nClientFD, "Invalid Packet\r\n", strlen( "Invalid Packet\r\n" ) );
 					if ( externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect )
 					{
 						sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0 );

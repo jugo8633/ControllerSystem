@@ -426,8 +426,15 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
 	{
 		_DBG( "[Center] Get Sign up request, type:%s  data:%s", rData["type"].c_str(), rData["data"].c_str() )
-		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
-		mongodb->insert( "member", "mobile", rData["data"] );
+
+		if ( SUCCESS == mongodb->insert( "member", "mobile", rData["data"] ) )
+		{
+			sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		}
+		else
+		{
+			sendCommand( nSocket, nCommand, STATUS_RINVJSON, nSequence, true );
+		}
 	}
 	else
 	{
