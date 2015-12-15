@@ -55,6 +55,7 @@ class CControlCenter: public CObject
 		int cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData);
 
 		/** Send CMP Request **/
 		int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);

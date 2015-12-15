@@ -72,14 +72,54 @@ void CCmpTest::connectCenter(const std::string strIP, const int nPort)
 
 void CCmpTest::cmpInitialRequest()
 {
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	int nRet = sendRequest( initial_request, pbuf );
+	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
+	{
+		printf( "Initial Body Data:%s\n", buf );
+	}
+}
+
+void CCmpTest::cmpSignupRequest()
+{
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	int nRet = sendRequest( sign_up_request, pbuf );
+	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
+	{
+		printf( "Sign up Body Data:%s\n", buf );
+	}
+}
+
+void CCmpTest::cmpEnquireLinkRequest()
+{
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	int nRet = sendRequest( enquire_link_request, pbuf );
+	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
+	{
+		printf( "enquire_link_request Body Data:%s\n", buf );
+	}
+}
+
+int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
+{
 	struct epoll_event ev;                     // Used for EPOLL.
 	struct epoll_event events[5];         // Used for EPOLL.
 	int noEvents;               						// EPOLL event number.
+	int nRet = -1;
 
 	if ( -1 == mSocket )
 	{
 		_DBG( "TCP Socket invalid" )
-		return;
+		return nRet;
 	}
 
 	char buf[MAX_DATA_LEN];
@@ -94,10 +134,14 @@ void CCmpTest::cmpInitialRequest()
 	ev.events = EPOLLIN | EPOLLET;
 	epoll_ctl( epfd, EPOLL_CTL_ADD, mSocket, &ev );
 
-	int nPacketLen = formatPacket( initial_request, &pbuf, getSequence() );
-	int nRet = send( mSocket, pbuf, nPacketLen, 0 );
+	int nPacketLen = formatPacket( nCommandId, &pbuf, getSequence() );
+	nRet = send( mSocket, pbuf, nPacketLen, 0 );
 	if ( nPacketLen == nRet )
 	{
+		CMP_HEADER *pHeader;
+		pHeader = (CMP_HEADER *) pbuf;
+		printf( "Send CMP Request Success: Command:%d Length:%d Status:%d Sequence:%d\n", ntohl( pHeader->command_id ), ntohl( pHeader->command_length ),
+				ntohl( pHeader->command_status ), ntohl( pHeader->sequence_number ) );
 		string strRecv;
 		for ( int i = 0 ; i < 3 ; ++i )
 		{
@@ -111,7 +155,6 @@ void CCmpTest::cmpInitialRequest()
 					char * pBody;
 					if ( sizeof(CMP_HEADER) <= (unsigned int) nRet )
 					{
-						CMP_HEADER *pHeader;
 						pHeader = (CMP_HEADER *) pbuf;
 						int nCommand = (ntohl( pHeader->command_id )) & 0x000000FF;
 						int nLength = ntohl( pHeader->command_length );
@@ -120,18 +163,24 @@ void CCmpTest::cmpInitialRequest()
 						char temp[MAX_DATA_LEN];
 						pBody = (char*) ((char *) const_cast<void*>( pbuf ) + sizeof(CMP_HEADER));
 						printf( "CMP Receive: command:%d length:%d status:%d sequence:%d\n", nCommand, nLength, nStatus, nSequence );
-						printf( "Initial Length:%d Response:%s\n", nRet, pBody );
+						memcpy( pRespBuf, pBody, nLength - sizeof(CMP_HEADER) );
 					}
-					return;
+					return nRet;
 				}
 			}
 		}
 	}
+	else
+	{
+		printf( "Send CMP Request Fail!!\n" );
+	}
 
+	return nRet;
 }
 
 int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 {
+	int net_type = 0;
 	int nBody_len = 0;
 	int nTotal_len;
 	CMP_PACKET packet;
@@ -146,6 +195,8 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 
 	string strControllerId = "123456789";
 	string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS\",\"station\":334,\"serial\":1347}";
+	string strSignup =
+			"\"id\": \"123456789\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 
 	switch ( nCommand )
 	{
@@ -157,43 +208,11 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			pIndex += 1;
 			nBody_len += 1;
 			break;
-		case authentication_request:
-			memcpy( pIndex, "08:00:27:a0:7c:58", 17 );
-			pIndex += 17;
-			nBody_len += 17;
-			memcpy( pIndex, "\0", 1 );
-			pIndex += 1;
-			nBody_len += 1;
-			break;
-		case enquire_link_request:
-			break;
-		case unbind_request:
-			break;
-		case power_port_request:
-			memcpy( pIndex, "1", 1 ); // wire
-			++pIndex;
-			++nBody_len;
-
-			memcpy( pIndex, "2", 1 );	//	port
-			++pIndex;
-			++nBody_len;
-
-			memcpy( pIndex, "0", 1 );	//	state
-			++pIndex;
-			++nBody_len;
-
-			memcpy( pIndex, "000c29d0013c", 12 );	//	controller
-			pIndex += 12;
-			nBody_len += 12;
-			memcpy( pIndex, "\0", 1 );
-			++pIndex;
-			++nBody_len;
-			break;
 		case access_log_request:
 			memcpy( pIndex, "2", 1 ); // type
 			++pIndex;
 			++nBody_len;
-			memcpy( pIndex, strAccessLog.c_str(), strAccessLog.length() );	//	log data
+			memcpy( pIndex, strAccessLog.c_str(), strAccessLog.length() ); //	log data
 			pIndex += strAccessLog.length();
 			nBody_len += strAccessLog.length();
 			memcpy( pIndex, "\0", 1 );
@@ -201,13 +220,22 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			++nBody_len;
 			break;
 		case initial_request:
-		{
-			int nType = 1;
-			int net_type = htonl( nType );
+			net_type = htonl( TYPE_MOBILE );
 			memcpy( pIndex, (const char*) &net_type, 4 );
 			pIndex += 4;
 			nBody_len += 4;
-		}
+			break;
+		case sign_up_request:
+			net_type = htonl( TYPE_MOBILE );
+			memcpy( pIndex, (const char*) &net_type, 4 );
+			pIndex += 4;
+			nBody_len += 4;
+			memcpy( pIndex, strSignup.c_str(), strSignup.length() ); //	sign up data
+			pIndex += strSignup.length();
+			nBody_len += strSignup.length();
+			memcpy( pIndex, "\0", 1 );
+			++pIndex;
+			++nBody_len;
 			break;
 	}
 

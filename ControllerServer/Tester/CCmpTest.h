@@ -15,6 +15,9 @@ class CCmpTest
 		CCmpTest();
 		virtual ~CCmpTest();
 		void cmpInitialRequest();
+		void cmpSignupRequest();
+		void cmpEnquireLinkRequest();
+		int sendRequest(const int nCommandId, void *pRespBuf);
 		void connectCenter(const std::string strIP, const int nPort);
 
 	private:

@@ -121,6 +121,8 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 	int nBodyLen = 0;
 	int nIndex = 0;
 	int nPort = 0;
+	int *pType;
+	int nType = 0;
 	char * pBody;
 	char temp[MAX_SIZE];
 	int nMacCount = 0;
@@ -209,14 +211,23 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				}
 				break;
 			case initial_request:
-			{
-				int *pType;
-				int nType = 0;
-				pType = (int*) pBody;
-				nType = ntohl( *pType );
+				nType = ntohl( *((int*) pBody) );
 				rData.setData( "type", ConvertToString( nType ) );
 				pBody += 4;
-			}
+				break;
+			case sign_up_request:
+				nType = ntohl( *((int*) pBody) );
+				rData.setData( "type", ConvertToString( nType ) );
+				pBody += 4;
+				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
+				{
+					memset( temp, 0, sizeof(temp) );
+					strcpy( temp, pBody );
+					rData.setData( "data", temp );
+					nStrLen = strlen( temp );
+					++nStrLen;
+					pBody += nStrLen;
+				}
 				break;
 		}
 	}

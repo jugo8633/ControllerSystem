@@ -50,6 +50,7 @@ CControlCenter::CControlCenter() :
 	cmpRequest[power_port_state_request] = &CControlCenter::cmpPowerPortState;
 	cmpRequest[access_log_request] = &CControlCenter::cmpAccessLog;
 	cmpRequest[initial_request] = &CControlCenter::cmpInitial;
+	cmpRequest[sign_up_request] = &CControlCenter::cmpSignup;
 }
 
 CControlCenter::~CControlCenter()
@@ -412,6 +413,25 @@ int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const v
 	else
 	{
 		_DBG( "[Center] Initial Fail, Invalid Body Parameters Socket FD:%d", nSocket )
+		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+	}
+	rData.clear();
+	return nRet;
+}
+
+int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
+	{
+		_DBG( "[Center] Get Sign up request, type:%s  data:%s", rData["type"].c_str(), rData["data"].c_str() )
+		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		mongodb->insert( "member", "mobile", rData["data"] );
+	}
+	else
+	{
+		_DBG( "[Center] Sign up Fail, Invalid Body Parameters Socket FD:%d", nSocket )
 		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
 	}
 	rData.clear();
