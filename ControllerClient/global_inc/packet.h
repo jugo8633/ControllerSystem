@@ -92,8 +92,8 @@ struct CMP_PACKET
 /*
  * Service Type
  */
-#define TYPE_MOBILE					1
-#define TYPE_POWER_STATION	2
+#define TYPE_MOBILE_TRACKER					1
+#define TYPE_POWER_STATION					2
 
 template<typename T, typename U>
 class create_map

@@ -94,8 +94,8 @@ struct CMP_PACKET
 /*
  * Service Type
  */
-#define TYPE_MOBILE					1
-#define TYPE_POWER_STATION	2
+#define TYPE_MOBILE_TRACKER					1
+#define TYPE_POWER_STATION					2
 
 template<typename T, typename U>
 class create_map
@@ -134,7 +134,7 @@ static map<int, string> mapStatus = create_map<int, string>\
 		"Command Length is invalid" )( STATUS_RINVCMDID, "Invalid Command ID" )( STATUS_RINVBNDSTS, "Incorrect BIND Status for given command" )( STATUS_RALYBND,
 		"Already in Bound State" )( STATUS_RSYSERR, "System Error" )(
 STATUS_RBINDFAIL, "Bind Failed" )( STATUS_RPPSFAIL, "Power Port Setting Fail" )( STATUS_RINVBODY, "Invalid Packet Body Data" )( STATUS_RINVCTRLID, "Invalid Controller ID" )(
-		STATUS_RINVJSON, "Invalid JSON Data" );
+STATUS_RINVJSON, "Invalid JSON Data" );
 
 inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc, const char *szLogPath = 0, int nClienFD = 0)
 {
