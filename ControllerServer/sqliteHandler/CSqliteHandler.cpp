@@ -15,6 +15,7 @@ using namespace std;
 
 static sqlite3 *dbController = 0;
 static sqlite3 *dbUser = 0;
+static sqlite3 *dbTracker = 0;
 
 CSqliteHandler* CSqliteHandler::m_instance = 0;
 
@@ -73,6 +74,29 @@ int CSqliteHandler::openUserDB(const char *dbPath)
 		_DBG( "[Sqlite] Opened user database successfully" )
 		const char *sql = "CREATE TABLE IF NOT EXISTS user(mac CHAR(20) NOT NULL, account CHAR(20), password CHAR(20), token CHAR(50), created_date DATE );";
 		if ( SQLITE_OK == sqlExec( dbUser, sql ) )
+		{
+			nRet = TRUE;
+		}
+	}
+
+	return nRet;
+}
+
+int CSqliteHandler::openTrackerDB(const char *dbPath)
+{
+	int rc = sqlite3_open( dbPath, &dbTracker );
+	int nRet = FALSE;
+
+	if ( rc )
+	{
+		_DBG( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbTracker ) )
+	}
+	else
+	{
+		_DBG( "[Sqlite] Opened Tracker database successfully" )
+		const char *sql =
+				"CREATE TABLE IF NOT EXISTS tracker(id	CHAR(128) NOT NULL, app_id 	CHAR(20)  NOT NULL,mac	CHAR(20), os	CHAR(20), phone	CHAR(20), fb_id CHAR(20), fb_name	CHAR(50), fb_email	CHAR(50), fb_account	CHAR(50), g_account CHAR(50), t_account CHAR(50), created_date DATE, PRIMARY KEY(id) );";
+		if ( SQLITE_OK == sqlExec( dbTracker, sql ) )
 		{
 			nRet = TRUE;
 		}

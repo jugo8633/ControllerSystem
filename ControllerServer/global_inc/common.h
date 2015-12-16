@@ -66,13 +66,13 @@ extern "C"
 #define _DUMP(msg)
 #endif
 
-__attribute__ ((unused)) static bool isValidStr(const char *szStr, int nMaxSize)
-{
-	if ((0 != szStr) && 0 < ((int) strlen(szStr)) && nMaxSize > ((int) strlen(szStr)))
-		return true;
-	else
-		return false;
-}
+	__attribute__ ((unused)) static bool isValidStr(const char *szStr, int nMaxSize)
+	{
+		if ( (0 != szStr) && 0 < ((int) strlen( szStr )) && nMaxSize > ((int) strlen( szStr )) )
+			return true;
+		else
+			return false;
+	}
 
 #define BUF_SIZE	2048	// socket send & recv buffer
 #define BACKLOG		128		// How many pending connections queue will hold

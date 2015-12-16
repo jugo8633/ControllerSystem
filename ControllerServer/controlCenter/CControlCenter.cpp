@@ -82,6 +82,7 @@ int CControlCenter::init(std::string strConf)
 	mConfig.strLogPath = config->getValue( "LOG", "log" );
 	mConfig.strServerPort = config->getValue( "CENTER", "port" );
 	string strControllerDB = config->getValue( "SQLITE", "db_controller" );
+	string strTrackerDB = config->getValue( "SQLITE", "db_tracker" );
 	delete config;
 
 	if ( mConfig.strLogPath.empty() )
@@ -108,6 +109,18 @@ int CControlCenter::init(std::string strConf)
 		return FALSE;
 	}
 	_DBG( "[Center] Open Sqlite DB controller Success" )
+
+	if ( strTrackerDB.empty() )
+	{
+		strTrackerDB = "/data/sqlite/tracker.db";
+	}
+	mkdirp( strTrackerDB );
+	if ( !sqlite->openTrackerDB( strTrackerDB.c_str() ) )
+	{
+		_DBG( "[Center] Open Sqlite DB tracker fail" )
+		return FALSE;
+	}
+	_DBG( "[Center] Open Sqlite DB tracker Success" )
 
 	mongodb->connectDB( "127.0.0.1", "27017" );
 	return TRUE;
@@ -395,6 +408,9 @@ int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const v
 	if ( 0 < nRet && rData.isValidKey( "type" ) )
 	{
 		_DBG( "[Center] Get Initial request, type:%s", rData["type"].c_str() )
+#ifdef TRACE_BODY
+		printLog( rData["type"], "[Center Recv Body]", mConfig.strLogPath);
+#endif
 		CInitial *init = new CInitial();
 		int nType = 0;
 		convertFromString( nType, rData["type"] );
@@ -426,7 +442,9 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
 	{
 		_DBG( "[Center] Get Sign up request, type:%s  data:%s", rData["type"].c_str(), rData["data"].c_str() )
-
+#ifdef TRACE_BODY
+		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
+#endif
 		if ( SUCCESS == mongodb->insert( "member", "mobile", rData["data"] ) )
 		{
 			sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );

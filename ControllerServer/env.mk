@@ -12,4 +12,4 @@ export DIR_APP_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 # Build Debug version use: -DDEBUG -DTRACE
 # Build Release version use: -DRELEASE
 #####################################
-export LOG=-DDEBUG
+export LOG=-DDEBUG -DTRACE_BODY
