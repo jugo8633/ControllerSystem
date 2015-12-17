@@ -19,6 +19,7 @@
 #include "CMongoDBHandler.h"
 #include "CAccessLog.h"
 #include "CInitial.h"
+#include "CSignup.h"
 
 using namespace std;
 
@@ -82,7 +83,7 @@ int CControlCenter::init(std::string strConf)
 	mConfig.strLogPath = config->getValue( "LOG", "log" );
 	mConfig.strServerPort = config->getValue( "CENTER", "port" );
 	string strControllerDB = config->getValue( "SQLITE", "db_controller" );
-	string strTrackerDB = config->getValue( "SQLITE", "db_tracker" );
+	string strIdeasDB = config->getValue( "SQLITE", "db_ideas" );
 	delete config;
 
 	if ( mConfig.strLogPath.empty() )
@@ -110,17 +111,17 @@ int CControlCenter::init(std::string strConf)
 	}
 	_DBG( "[Center] Open Sqlite DB controller Success" )
 
-	if ( strTrackerDB.empty() )
+	if ( strIdeasDB.empty() )
 	{
-		strTrackerDB = "/data/sqlite/tracker.db";
+		strIdeasDB = "/data/sqlite/ideas.db";
 	}
-	mkdirp( strTrackerDB );
-	if ( !sqlite->openTrackerDB( strTrackerDB.c_str() ) )
+	mkdirp( strIdeasDB );
+	if ( !sqlite->openIdeasDB( strIdeasDB.c_str() ) )
 	{
-		_DBG( "[Center] Open Sqlite DB tracker fail" )
+		_DBG( "[Center] Open Sqlite DB ideas fail" )
 		return FALSE;
 	}
-	_DBG( "[Center] Open Sqlite DB tracker Success" )
+	_DBG( "[Center] Open Sqlite DB ideas Success" )
 
 	mongodb->connectDB( "127.0.0.1", "27017" );
 	return TRUE;
@@ -391,6 +392,9 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 		int nType = -1;
 		convertFromString( nType, rData["type"] );
 		accessLog->insertLog( nType, rData["data"] );
+#ifdef TRACE_BODY
+		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
+#endif
 	}
 	else
 	{
@@ -442,17 +446,31 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
 	{
 		_DBG( "[Center] Get Sign up request, type:%s  data:%s", rData["type"].c_str(), rData["data"].c_str() )
-#ifdef TRACE_BODY
-		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
-#endif
-		if ( SUCCESS == mongodb->insert( "member", "mobile", rData["data"] ) )
+
+		CSignup *signup = new CSignup();
+		if ( INSERT_FAIL != signup->insert( rData["data"] ) )
 		{
 			sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
 		}
 		else
 		{
-			sendCommand( nSocket, nCommand, STATUS_RINVJSON, nSequence, true );
+			sendCommand( nSocket, nCommand, STATUS_RSYSERR, nSequence, true );
 		}
+		delete signup;
+
+#ifdef TRACE_BODY
+		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
+#endif
+		/*
+		 if ( SUCCESS == mongodb->insert( "member", "mobile", rData["data"] ) )
+		 {
+		 sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		 }
+		 else
+		 {
+		 sendCommand( nSocket, nCommand, STATUS_RINVJSON, nSequence, true );
+		 }
+		 */
 	}
 	else
 	{

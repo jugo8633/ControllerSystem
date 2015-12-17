@@ -196,7 +196,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strControllerId = "123456789";
 	string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS\",\"station\":334,\"serial\":1347}";
 	string strSignup =
-			"{\"id\": \"123456789\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
+			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 
 	switch ( nCommand )
 	{
@@ -220,13 +220,13 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			++nBody_len;
 			break;
 		case initial_request:
-			net_type = htonl( TYPE_MOBILE );
+			net_type = htonl( TYPE_MOBILE_TRACKER );
 			memcpy( pIndex, (const char*) &net_type, 4 );
 			pIndex += 4;
 			nBody_len += 4;
 			break;
 		case sign_up_request:
-			net_type = htonl( TYPE_MOBILE );
+			net_type = htonl( TYPE_MOBILE_TRACKER );
 			memcpy( pIndex, (const char*) &net_type, 4 );
 			pIndex += 4;
 			nBody_len += 4;

@@ -21,8 +21,10 @@ class CSqliteHandler
 		static CSqliteHandler* getInstance();
 		int openControllerDB(const char *dbPath);
 		int openUserDB(const char *dbPath);
-		int openTrackerDB(const char *dbPath);
+		int openIdeasDB(const char *dbPath);
 		int controllerSqlExec(const char *szSql);
+		int ideasSqlExec(const char *szSql);
+		int ideasSqlExec(const char *szSql, std::list<std::string> &listValue, int nColumeIndex);
 		int sqlExec(sqlite3 *db, const char *szSql);
 		int getControllerColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue);
 		int getControllerColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue, const char *szValue);

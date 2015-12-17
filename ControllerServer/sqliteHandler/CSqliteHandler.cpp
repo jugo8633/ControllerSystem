@@ -15,7 +15,7 @@ using namespace std;
 
 static sqlite3 *dbController = 0;
 static sqlite3 *dbUser = 0;
-static sqlite3 *dbTracker = 0;
+static sqlite3 *dbIdeas = 0;				// For Ideas SDK
 
 CSqliteHandler* CSqliteHandler::m_instance = 0;
 
@@ -82,21 +82,21 @@ int CSqliteHandler::openUserDB(const char *dbPath)
 	return nRet;
 }
 
-int CSqliteHandler::openTrackerDB(const char *dbPath)
+int CSqliteHandler::openIdeasDB(const char *dbPath)
 {
-	int rc = sqlite3_open( dbPath, &dbTracker );
+	int rc = sqlite3_open( dbPath, &dbIdeas );
 	int nRet = FALSE;
 
 	if ( rc )
 	{
-		_DBG( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbTracker ) )
+		_DBG( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbIdeas ) )
 	}
 	else
 	{
 		_DBG( "[Sqlite] Opened Tracker database successfully" )
 		const char *sql =
-				"CREATE TABLE IF NOT EXISTS tracker(id	CHAR(128) NOT NULL, app_id 	CHAR(20)  NOT NULL,mac	CHAR(20), os	CHAR(20), phone	CHAR(20), fb_id CHAR(20), fb_name	CHAR(50), fb_email	CHAR(50), fb_account	CHAR(50), g_account CHAR(50), t_account CHAR(50), created_date DATE, PRIMARY KEY(id) );";
-		if ( SQLITE_OK == sqlExec( dbTracker, sql ) )
+				"CREATE TABLE IF NOT EXISTS user(id	CHAR(128) NOT NULL, app_id 	CHAR(20)  NOT NULL,mac	CHAR(20), os	CHAR(20), phone	CHAR(20), fb_id CHAR(20), fb_name	CHAR(50), fb_email	CHAR(50), fb_account	CHAR(50), g_account CHAR(50), t_account CHAR(50), created_date DATE DEFAULT (datetime('now','localtime')), PRIMARY KEY(id) );";
+		if ( SQLITE_OK == sqlExec( dbIdeas, sql ) )
 		{
 			nRet = TRUE;
 		}
@@ -107,9 +107,11 @@ int CSqliteHandler::openTrackerDB(const char *dbPath)
 
 void CSqliteHandler::close()
 {
+	sqlite3_close( dbIdeas );
 	sqlite3_close( dbController );
 	sqlite3_close( dbUser );
 
+	dbIdeas = 0;
 	dbController = 0;
 	dbUser = 0;
 
@@ -142,6 +144,15 @@ int CSqliteHandler::controllerSqlExec(const char *szSql)
 		_DBG( "[Sqlite] SQL exec successfully : %s", szSql );
 	}
 
+	return nRet;
+}
+
+int CSqliteHandler::ideasSqlExec(const char *szSql)
+{
+	int nRet = FAIL;
+	nRet = sqlExec( dbIdeas, szSql );
+	if ( SQLITE_OK == nRet )
+		nRet = SUCCESS;
 	return nRet;
 }
 
@@ -249,6 +260,40 @@ int CSqliteHandler::getControllerColumeValueInt(const char *szSql, std::list<int
 		{
 			nValue = sqlite3_column_int( stmt, nColumeIndex );
 			listValue.push_back( nValue );
+			++row;
+		}
+		else
+		{
+			if ( s != SQLITE_DONE )
+			{
+				_DBG( "[Sqlite] SQL:%s exec fail", szSql );
+			}
+			break;
+		}
+	}
+
+	sqlite3_finalize( stmt );
+
+	return row;
+}
+
+int CSqliteHandler::ideasSqlExec(const char *szSql, list<string> &listValue, int nColumeIndex)
+{
+	sqlite3_stmt * stmt;
+	int row = 0;
+	int s = -1;
+	int nValue = -1;
+	const unsigned char * text;
+
+	sqlite3_prepare( dbIdeas, szSql, strlen( szSql ) + 1, &stmt, NULL );
+
+	while ( 1 )
+	{
+		s = sqlite3_step( stmt );
+		if ( s == SQLITE_ROW )
+		{
+			text = sqlite3_column_text( stmt, nColumeIndex );
+			listValue.push_back( string( (const char*) text ) );
 			++row;
 		}
 		else
