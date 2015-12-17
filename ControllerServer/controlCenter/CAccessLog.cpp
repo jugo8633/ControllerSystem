@@ -5,6 +5,7 @@
  *      Author: root
  */
 
+#include "common.h"
 #include "CAccessLog.h"
 #include "packet.h"
 #include <map>
@@ -40,12 +41,10 @@ int CAccessLog::insertLog(const int nType, string strData)
 	switch ( nType )
 	{
 		case TYPE_MOBILE_TRACKER:
-			mongodb->insert( "access", "mobile", strData );
-			break;
+			return mongodb->insert( "access", "mobile", strData );
 		case TYPE_POWER_STATION:
-			mongodb->insert( "access", "power", strData );
-			break;
+			return mongodb->insert( "access", "power", strData );
 	}
-	return 0;
+	return FAIL;
 }
 

@@ -388,13 +388,16 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
 	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
 	{
-		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
-		int nType = -1;
-		convertFromString( nType, rData["type"] );
-		accessLog->insertLog( nType, rData["data"] );
 #ifdef TRACE_BODY
 		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
 #endif
+		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		int nType = -1;
+		convertFromString( nType, rData["type"] );
+		if ( FAIL == accessLog->insertLog( nType, rData["data"] ) )
+		{
+			printLog( "Insert Access Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath );
+		}
 	}
 	else
 	{
@@ -411,7 +414,6 @@ int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const v
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
 	if ( 0 < nRet && rData.isValidKey( "type" ) )
 	{
-		_DBG( "[Center] Get Initial request, type:%s", rData["type"].c_str() )
 #ifdef TRACE_BODY
 		printLog( rData["type"], "[Center Recv Body]", mConfig.strLogPath);
 #endif
@@ -445,7 +447,9 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	int nRet = cmpParser->parseBody( nCommand, pData, rData );
 	if ( 0 < nRet && rData.isValidKey( "type" ) && rData.isValidKey( "data" ) )
 	{
-		_DBG( "[Center] Get Sign up request, type:%s  data:%s", rData["type"].c_str(), rData["data"].c_str() )
+#ifdef TRACE_BODY
+		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
+#endif
 
 		CSignup *signup = new CSignup();
 		if ( INSERT_FAIL != signup->insert( rData["data"] ) )
@@ -457,10 +461,6 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 			sendCommand( nSocket, nCommand, STATUS_RSYSERR, nSequence, true );
 		}
 		delete signup;
-
-#ifdef TRACE_BODY
-		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
-#endif
 		/*
 		 if ( SUCCESS == mongodb->insert( "member", "mobile", rData["data"] ) )
 		 {
