@@ -79,6 +79,10 @@ int main(int argc, char* argv[])
 			{
 				cmpTest->cmpEnquireLinkRequest();
 			}
+			else if ( strncmp( buffer, "pressure", 8 ) == 0 )
+			{
+				cmpTest->cmpPressure();
+			}
 			else if ( strncmp( buffer, "help", 4 ) == 0 )
 			{
 				printf( "Test CMP Use:\ncmp init\ncmp signup\ncmp enquire\n" );
