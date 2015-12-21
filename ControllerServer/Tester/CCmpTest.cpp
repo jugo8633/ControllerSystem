@@ -184,6 +184,7 @@ int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 						printf( "%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength, nStatus, nSequence );
 						memcpy( pRespBuf, pBody, nLength - sizeof(CMP_HEADER) );
 					}
+					close( epfd );
 					return nRet;
 				}
 			}
@@ -193,7 +194,7 @@ int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 	{
 		printf( "Send CMP Request Fail!!\n" );
 	}
-
+	close( epfd );
 	return nRet;
 }
 
