@@ -80,7 +80,7 @@ void CCmpTest::cmpInitialRequest()
 	int nRet = sendRequest( initial_request, pbuf );
 	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
 	{
-		printf( "Initial Body Data:%s\n", buf );
+		printf( "Initial Response Body Data:%s\n", buf );
 	}
 }
 
@@ -93,7 +93,7 @@ void CCmpTest::cmpSignupRequest()
 	int nRet = sendRequest( sign_up_request, pbuf );
 	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
 	{
-		printf( "Sign up Body Data:%s\n", buf );
+		printf( "Sign up Response Body Data:%s\n", buf );
 	}
 }
 
@@ -106,7 +106,20 @@ void CCmpTest::cmpEnquireLinkRequest()
 	int nRet = sendRequest( enquire_link_request, pbuf );
 	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
 	{
-		printf( "enquire_link_request Body Data:%s\n", buf );
+		printf( "Enquire Link Response Body Data:%s\n", buf );
+	}
+}
+
+void CCmpTest::cmpAccessLogRequest()
+{
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	int nRet = sendRequest( access_log_request, pbuf );
+	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
+	{
+		printf( "Access Log Response Body Data:%s\n", buf );
 	}
 }
 
