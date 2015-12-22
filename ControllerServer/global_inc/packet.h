@@ -73,6 +73,8 @@ struct CMP_PACKET
 #define power_port_response						0x80000012
 #define power_port_state_request				0x00000013
 #define power_port_state_response			0x80000013
+#define SER API Sign in request					0x00000014
+#define SER API Sign in response					0x80000014
 
 /*
  * CMP status set
@@ -87,6 +89,7 @@ struct CMP_PACKET
 #define STATUS_RBINDFAIL							0x00000010		//Bind Failed
 #define STATUS_RPPSFAIL								0x00000011		//Power Port Setting Fail
 #define STATUS_RPPSTAFAIL							0x00000012		//Get Power State Fail
+#define STATUS_RSIGINFAIL							0x00000013		//SER API Sign in Fail
 #define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
 #define STATUS_RINVJSON							0x00000042		//Invalid JSON Data
