@@ -79,7 +79,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	string strTmp;
 	int len;
 	int h;
-	int nRet = -1;
+	int nRet = HTTP_ERROR;
 	int sockfd;
 	struct sockaddr_in servaddr;
 	char str[50];
@@ -95,7 +95,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	if ( (hptr = gethostbyname( strURL.c_str() )) == NULL )
 	{
 		_DBG( " gethostbyname error for host: %s: %s", strURL.c_str(), hstrerror( h_errno ) )
-		return -1;
+		return nRet;
 	}
 
 	printf( "http hostname: %s\n", hptr->h_name );
@@ -111,7 +111,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	if ( (sockfd = socket( AF_INET, SOCK_STREAM, 0 )) < 0 )
 	{
 		printf( "Create Socket Fail, error: %s\n", hstrerror( h_errno ) );
-		return -1;
+		return nRet;
 	};
 	fcntl( sockfd, F_SETFL, O_NONBLOCK );
 
@@ -121,7 +121,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	if ( 0 >= inet_pton( AF_INET, str, &servaddr.sin_addr ) )
 	{
 		printf( "inet_pton Fail, error: %s\n", hstrerror( h_errno ) );
-		return -1;
+		return nRet;
 	}
 
 	connect( sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr) );
@@ -141,7 +141,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 		if ( so_error != 0 )
 		{
 			_DBG( "Socket Connect Fail" )
-			return -1;
+			return nRet;
 		}
 	}
 
@@ -174,7 +174,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	if ( len < 0 )
 	{
 		printf( "Socket Send Fail Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno ) );
-		return -1;
+		return nRet;
 	}
 	else
 	{
@@ -207,7 +207,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 				if ( string::npos != strToken.find( "HTTP/1.1" ) )
 				{
 					mapData["code"] = strToken.substr( 9, 3 );
-					nRet = 1;
+					nRet = HTTP_OK;
 				}
 
 				if ( 0 == strToken.compare( "\r" ) )
