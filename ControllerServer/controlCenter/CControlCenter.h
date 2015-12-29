@@ -27,6 +27,7 @@ class CThreadHandler;
 class CMongoDBHandler;
 class CJsonHandler;
 class CAccessLog;
+class CSerApi;
 
 class CControlCenter: public CObject
 {
@@ -77,6 +78,7 @@ class CControlCenter: public CObject
 		CThreadHandler *tdEnquireLink;
 		CMongoDBHandler *mongodb;
 		CAccessLog *accessLog;
+		CSerApi *serapi;
 		std::vector<int> vEnquireLink;
 
 		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);

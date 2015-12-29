@@ -20,6 +20,7 @@
 #include "CAccessLog.h"
 #include "CInitial.h"
 #include "CSignup.h"
+#include "CSerApi.h"
 
 using namespace std;
 
@@ -39,7 +40,7 @@ void *threadEnquireLinkRequest(void *argv);
 
 CControlCenter::CControlCenter() :
 		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler ), mongodb(
-				CMongoDBHandler::getInstance() ), accessLog( CAccessLog::getInstance() )
+				CMongoDBHandler::getInstance() ), accessLog( CAccessLog::getInstance() ), serapi( CSerApi::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -452,6 +453,7 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 #endif
 
 		CSignup *signup = new CSignup();
+		signup->setLogPath( mConfig.strLogPath );
 		if ( INSERT_FAIL != signup->insert( rData["data"] ) )
 		{
 			sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );

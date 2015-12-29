@@ -11,7 +11,8 @@ export MODULES=global_inc \
 			 sqliteHandler	\
 			 mongoDBHandler	\
 			 httpHandler \
-			 jsonHandler
+			 jsonHandler \
+			 serApiHandler
 			
 			 
 export EXT_MODULES=extInclude

@@ -9,6 +9,7 @@
 #include "common.h"
 #include "cJSON.h"
 #include "CSignup.h"
+#include "common.h"
 
 using namespace std;
 
@@ -106,8 +107,20 @@ int CSignup::insert(string strJSON)
 		}
 		cJSON_Delete( root );
 	}
+	else
+	{
+		if ( !strLogPath.empty() )
+		{
+			printLog( strJSON, "[Sign up Parse Fail]", strLogPath );
+		}
+	}
 
 	return nRet;
+}
+
+void CSignup::setLogPath(std::string strPath)
+{
+	strLogPath = strPath;
 }
 
 bool CSignup::isExist(std::string strId)

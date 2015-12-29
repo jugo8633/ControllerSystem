@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <sys/epoll.h>
 #include <memory.h>
+#include <ctime>
 #include "CCmpTest.h"
 #include "common.h"
 #include "packet.h"
@@ -79,7 +80,7 @@ void CCmpTest::cmpInitialRequest()
 	int nRet = sendRequest( initial_request, pbuf );
 	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
 	{
-		printf( "Initial Body Data:%s\n", buf );
+		printf( "Initial Response Body Data:%s\n", buf );
 	}
 }
 
@@ -92,7 +93,7 @@ void CCmpTest::cmpSignupRequest()
 	int nRet = sendRequest( sign_up_request, pbuf );
 	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
 	{
-		printf( "Sign up Body Data:%s\n", buf );
+		printf( "Sign up Response Body Data:%s\n", buf );
 	}
 }
 
@@ -105,7 +106,20 @@ void CCmpTest::cmpEnquireLinkRequest()
 	int nRet = sendRequest( enquire_link_request, pbuf );
 	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
 	{
-		printf( "enquire_link_request Body Data:%s\n", buf );
+		printf( "Enquire Link Response Body Data:%s\n", buf );
+	}
+}
+
+void CCmpTest::cmpAccessLogRequest()
+{
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	int nRet = sendRequest( access_log_request, pbuf );
+	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
+	{
+		printf( "Access Log Response Body Data:%s\n", buf );
 	}
 }
 
@@ -140,7 +154,10 @@ int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 	{
 		CMP_HEADER *pHeader;
 		pHeader = (CMP_HEADER *) pbuf;
-		printf( "Send CMP Request Success: Command:%d Length:%d Status:%d Sequence:%d\n", ntohl( pHeader->command_id ), ntohl( pHeader->command_length ),
+		std::time_t t = std::time( NULL );
+		char mbstr[100];
+		std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
+		printf( "%s - CMP Send Request: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, ntohl( pHeader->command_id ), ntohl( pHeader->command_length ),
 				ntohl( pHeader->command_status ), ntohl( pHeader->sequence_number ) );
 		string strRecv;
 		for ( int i = 0 ; i < 3 ; ++i )
@@ -162,9 +179,12 @@ int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 						int nSequence = ntohl( pHeader->sequence_number );
 						char temp[MAX_DATA_LEN];
 						pBody = (char*) ((char *) const_cast<void*>( pbuf ) + sizeof(CMP_HEADER));
-						printf( "CMP Receive: command:%d length:%d status:%d sequence:%d\n", nCommand, nLength, nStatus, nSequence );
+						memset( mbstr, 0, sizeof(mbstr) );
+						std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
+						printf( "%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength, nStatus, nSequence );
 						memcpy( pRespBuf, pBody, nLength - sizeof(CMP_HEADER) );
 					}
+					close( epfd );
 					return nRet;
 				}
 			}
@@ -174,7 +194,7 @@ int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 	{
 		printf( "Send CMP Request Fail!!\n" );
 	}
-
+	close( epfd );
 	return nRet;
 }
 
@@ -245,5 +265,43 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 
 	return nTotal_len;
 
+}
+
+void CCmpTest::cmpPressure()
+{
+	int nPacketLen = 0;
+	int nRet = 0;
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+	CMP_HEADER *pHeader;
+	char mbstr[100];
+
+	while ( 1 )
+	{
+		nPacketLen = formatPacket( enquire_link_request, &pbuf, getSequence() );
+		nRet = send( mSocket, pbuf, nPacketLen, 0 );
+		if ( nPacketLen == nRet )
+		{
+			pHeader = (CMP_HEADER *) pbuf;
+			std::time_t t = std::time( NULL );
+			memset( mbstr, 0, sizeof(mbstr) );
+			std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
+			printf( "%s - CMP Send Request: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, ntohl( pHeader->command_id ), ntohl( pHeader->command_length ),
+					ntohl( pHeader->command_status ), ntohl( pHeader->sequence_number ) );
+
+			memset( buf, 0, sizeof(buf) );
+			nRet = recv( mSocket, pbuf, MAX_DATA_LEN, MSG_NOSIGNAL );
+			pHeader = (CMP_HEADER *) pbuf;
+			int nCommand = (ntohl( pHeader->command_id )) & 0x000000FF;
+			int nLength = ntohl( pHeader->command_length );
+			int nStatus = ntohl( pHeader->command_status );
+			int nSequence = ntohl( pHeader->sequence_number );
+			memset( mbstr, 0, sizeof(mbstr) );
+			std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
+			printf( "%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength, nStatus, nSequence );
+		}
+		sleep( 0.1 );
+	}
 }
 
