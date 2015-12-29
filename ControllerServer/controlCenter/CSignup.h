@@ -23,8 +23,10 @@ class CSignup
 		virtual ~CSignup();
 		int insert(std::string strJSON);
 		bool isExist(std::string strId);
+		void setLogPath(std::string strPath);
 
 	private:
 		CSqliteHandler *sqlite;
+		std::string strLogPath;
 };
 

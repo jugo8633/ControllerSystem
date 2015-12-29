@@ -453,6 +453,7 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 #endif
 
 		CSignup *signup = new CSignup();
+		signup->setLogPath( mConfig.strLogPath );
 		if ( INSERT_FAIL != signup->insert( rData["data"] ) )
 		{
 			sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
