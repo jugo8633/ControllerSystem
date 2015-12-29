@@ -73,8 +73,8 @@ struct CMP_PACKET
 #define power_port_response						0x80000012
 #define power_port_state_request				0x00000013
 #define power_port_state_response			0x80000013
-#define SER API Sign in request					0x00000014
-#define SER API Sign in response					0x80000014
+#define ser_api_signin_request					0x00000014
+#define ser_api_signin_response					0x80000014
 
 /*
  * CMP status set

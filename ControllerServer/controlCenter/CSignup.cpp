@@ -9,7 +9,7 @@
 #include "common.h"
 #include "cJSON.h"
 #include "CSignup.h"
-#include "common.h"
+#include "packet.h"
 
 using namespace std;
 
