@@ -19,6 +19,7 @@ class CCmpTest
 		void cmpEnquireLinkRequest();
 		void cmpAccessLogRequest();
 		void cmpPressure();
+		void cmpMdmLogin();
 		int sendRequest(const int nCommandId, void *pRespBuf);
 		void connectCenter(const std::string strIP, const int nPort);
 

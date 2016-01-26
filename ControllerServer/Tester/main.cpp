@@ -87,9 +87,13 @@ int main(int argc, char* argv[])
 			{
 				cmpTest->cmpPressure();
 			}
+			else if ( strncmp( buffer, "mdm login", 9 ) == 0 )
+			{
+				cmpTest->cmpMdmLogin();
+			}
 			else if ( strncmp( buffer, "help", 4 ) == 0 )
 			{
-				printf( "Test CMP Use:\ncmp init\ncmp signup\ncmp enquire\n" );
+				printf( "Test CMP Use:\ncmp init\ncmp signup\ncmp enquire\nmdm login\n" );
 			}
 			else
 			{

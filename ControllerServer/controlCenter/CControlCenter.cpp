@@ -21,6 +21,7 @@
 #include "CInitial.h"
 #include "CSignup.h"
 #include "CSerApi.h"
+#include "CMdmHandler.h"
 
 using namespace std;
 
@@ -40,7 +41,7 @@ void *threadEnquireLinkRequest(void *argv);
 
 CControlCenter::CControlCenter() :
 		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler ), mongodb(
-				CMongoDBHandler::getInstance() ), accessLog( CAccessLog::getInstance() ), serapi( CSerApi::getInstance() )
+				CMongoDBHandler::getInstance() ), accessLog( CAccessLog::getInstance() ), serapi( CSerApi::getInstance() ), mdm( CMdmHandler::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -53,6 +54,7 @@ CControlCenter::CControlCenter() :
 	cmpRequest[access_log_request] = &CControlCenter::cmpAccessLog;
 	cmpRequest[initial_request] = &CControlCenter::cmpInitial;
 	cmpRequest[sign_up_request] = &CControlCenter::cmpSignup;
+	cmpRequest[ser_mdm_login_request] = &CControlCenter::cmpMdmLogin;
 }
 
 CControlCenter::~CControlCenter()
@@ -85,6 +87,7 @@ int CControlCenter::init(std::string strConf)
 	mConfig.strServerPort = config->getValue( "CENTER", "port" );
 	string strControllerDB = config->getValue( "SQLITE", "db_controller" );
 	string strIdeasDB = config->getValue( "SQLITE", "db_ideas" );
+	string strMdmDB = config->getValue( "SQLITE", "db_mdm" );
 	delete config;
 
 	if ( mConfig.strLogPath.empty() )
@@ -123,6 +126,18 @@ int CControlCenter::init(std::string strConf)
 		return FALSE;
 	}
 	_DBG( "[Center] Open Sqlite DB ideas Success" )
+
+	if ( strMdmDB.empty() )
+	{
+		strMdmDB = "/data/sqlite/mdm.db";
+	}
+	mkdirp( strMdmDB );
+	if ( !sqlite->openMdmDB( strMdmDB.c_str() ) )
+	{
+		_DBG( "[Center] Open Sqlite DB mdm fail" )
+		return FALSE;
+	}
+	_DBG( "[Center] Open Sqlite DB mdm Success" )
 
 	mongodb->connectDB( "127.0.0.1", "27017" );
 	return TRUE;
@@ -463,16 +478,6 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 			sendCommand( nSocket, nCommand, STATUS_RSYSERR, nSequence, true );
 		}
 		delete signup;
-		/*
-		 if ( SUCCESS == mongodb->insert( "member", "mobile", rData["data"] ) )
-		 {
-		 sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
-		 }
-		 else
-		 {
-		 sendCommand( nSocket, nCommand, STATUS_RINVJSON, nSequence, true );
-		 }
-		 */
 	}
 	else
 	{
@@ -480,6 +485,27 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
 	}
 	rData.clear();
+	return nRet;
+}
+
+int CControlCenter::cmpMdmLogin(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet && rData.isValidKey( "account" ) && rData.isValidKey( "password" ) )
+	{
+#ifdef TRACE_BODY
+		printLog( rData["account"] + "," + rData["password"], "[Center Recv Body]", mConfig.strLogPath);
+#endif
+		string strToken = mdm->login( rData["account"], rData["password"] );
+		if ( strToken.empty() )
+		{
+			sendCommand( nSocket, nCommand, STATUS_RMDMLOGINFAIL, nSequence, true );
+			return FAIL;
+		}
+		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+	}
+
 	return nRet;
 }
 

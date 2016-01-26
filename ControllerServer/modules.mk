@@ -12,7 +12,7 @@ export MODULES=global_inc \
 			 mongoDBHandler	\
 			 httpHandler \
 			 jsonHandler \
-			 serApiHandler
-			
+			 serApiHandler \
+			 mdmHandler
 			 
 export EXT_MODULES=extInclude

@@ -2,7 +2,7 @@
  * CAccessLog.cpp
  *
  *  Created on: 2015年12月7日
- *      Author: root
+ *      Author: Louis Ju
  */
 
 #include "common.h"

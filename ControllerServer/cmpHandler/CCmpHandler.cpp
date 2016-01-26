@@ -229,6 +229,26 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 					pBody += nStrLen;
 				}
 				break;
+			case ser_mdm_login_request:
+				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
+				{
+					memset( temp, 0, sizeof(temp) );
+					strcpy( temp, pBody );
+					rData.setData( "account", temp );
+					nStrLen = strlen( temp );
+					++nStrLen;
+					pBody += nStrLen;
+				}
+				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
+				{
+					memset( temp, 0, sizeof(temp) );
+					strcpy( temp, pBody );
+					rData.setData( "password", temp );
+					nStrLen = strlen( temp );
+					++nStrLen;
+					pBody += nStrLen;
+				}
+				break;
 		}
 	}
 	else

@@ -123,6 +123,19 @@ void CCmpTest::cmpAccessLogRequest()
 	}
 }
 
+void CCmpTest::cmpMdmLogin()
+{
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	int nRet = sendRequest( ser_mdm_login_request, pbuf );
+	if ( sizeof(CMP_HEADER) < (unsigned int) nRet )
+	{
+		printf( "MDM Login Response Body Data:%s\n", buf );
+	}
+}
+
 int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 {
 	struct epoll_event ev;                     // Used for EPOLL.
@@ -217,6 +230,8 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS\",\"station\":334,\"serial\":1347}";
 	string strSignup =
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
+	string strMdmAccount = "testing@iii.org.tw";
+	string strMdmPasswd = "testing";
 
 	switch ( nCommand )
 	{
@@ -256,6 +271,20 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			memcpy( pIndex, "\0", 1 );
 			++pIndex;
 			++nBody_len;
+			break;
+		case ser_mdm_login_request:
+			memcpy( pIndex, strMdmAccount.c_str(), strMdmAccount.size() );
+			pIndex += strMdmAccount.size();
+			nBody_len += strMdmAccount.size();
+			memcpy( pIndex, "\0", 1 );
+			pIndex += 1;
+			nBody_len += 1;
+			memcpy( pIndex, strMdmPasswd.c_str(), strMdmPasswd.size() );
+			pIndex += strMdmPasswd.size();
+			nBody_len += strMdmPasswd.size();
+			memcpy( pIndex, "\0", 1 );
+			pIndex += 1;
+			nBody_len += 1;
 			break;
 	}
 
@@ -304,4 +333,3 @@ void CCmpTest::cmpPressure()
 		sleep( 0.1 );
 	}
 }
-

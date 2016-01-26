@@ -28,6 +28,7 @@ class CMongoDBHandler;
 class CJsonHandler;
 class CAccessLog;
 class CSerApi;
+class CMdmHandler;
 
 class CControlCenter: public CObject
 {
@@ -57,6 +58,7 @@ class CControlCenter: public CObject
 		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpMdmLogin(int nSocket, int nCommand, int nSequence, const void *pData);
 
 		/** Send CMP Request **/
 		int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
@@ -79,6 +81,7 @@ class CControlCenter: public CObject
 		CMongoDBHandler *mongodb;
 		CAccessLog *accessLog;
 		CSerApi *serapi;
+		CMdmHandler *mdm;
 		std::vector<int> vEnquireLink;
 
 		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);
