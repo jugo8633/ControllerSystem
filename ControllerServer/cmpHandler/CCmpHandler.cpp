@@ -229,7 +229,7 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 					pBody += nStrLen;
 				}
 				break;
-			case ser_mdm_login_request:
+			case mdm_login_request:
 				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
 				{
 					memset( temp, 0, sizeof(temp) );

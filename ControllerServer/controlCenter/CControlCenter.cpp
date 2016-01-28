@@ -54,7 +54,7 @@ CControlCenter::CControlCenter() :
 	cmpRequest[access_log_request] = &CControlCenter::cmpAccessLog;
 	cmpRequest[initial_request] = &CControlCenter::cmpInitial;
 	cmpRequest[sign_up_request] = &CControlCenter::cmpSignup;
-	cmpRequest[ser_mdm_login_request] = &CControlCenter::cmpMdmLogin;
+	cmpRequest[mdm_login_request] = &CControlCenter::cmpMdmLogin;
 }
 
 CControlCenter::~CControlCenter()
@@ -503,7 +503,7 @@ int CControlCenter::cmpMdmLogin(int nSocket, int nCommand, int nSequence, const 
 			sendCommand( nSocket, nCommand, STATUS_RMDMLOGINFAIL, nSequence, true );
 			return FAIL;
 		}
-		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		nRet = cmpMdmLoginResponse( nSocket, nSequence, strToken.c_str() );
 	}
 
 	return nRet;
@@ -511,46 +511,20 @@ int CControlCenter::cmpMdmLogin(int nSocket, int nCommand, int nSequence, const 
 
 int CControlCenter::cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData)
 {
-	int nRet = -1;
-	int nBody_len = 0;
-	int nTotal_len = 0;
-
-	CMP_PACKET packet;
-	void *pHeader = &packet.cmpHeader;
-	char *pIndex = packet.cmpBody.cmpdata;
-
-	memset( &packet, 0, sizeof(CMP_PACKET) );
-
-	cmpParser->formatHeader( power_port_state_response, STATUS_ROK, nSequence, &pHeader );
-
-	memcpy( pIndex, szData, strlen( szData ) );
-	pIndex += strlen( szData );
-	nBody_len += strlen( szData );
-	memcpy( pIndex, "\0", 1 );
-	pIndex += 1;
-	nBody_len += 1;
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl( nTotal_len );
-
-	nRet = cmpServer->socketSend( nSocket, &packet, nTotal_len );
-	printPacket( power_port_state_response, STATUS_ROK, nSequence, nRet, "[Center]", mConfig.strLogPath.c_str(), nSocket );
-
-	char szLog[MAX_DATA_LEN];
-
-	if ( 0 >= nRet )
-	{
-		sprintf( szLog, "send power port state response fail , socket:%d", nSocket );
-	}
-	else
-	{
-		sprintf( szLog, "power port state:%s", szData );
-	}
-	printLog( szLog, "[Center]", mConfig.strLogPath.c_str() );
-	return nRet;
+	return cmpResponse( nSocket, power_port_state_response, nSequence, szData );
 }
 
 int CControlCenter::cmpInitialResponse(int nSocket, int nSequence, const char * szData)
+{
+	return cmpResponse( nSocket, initial_response, nSequence, szData );
+}
+
+int CControlCenter::cmpMdmLoginResponse(int nSocket, int nSequence, const char * szData)
+{
+	return cmpResponse( nSocket, mdm_login_response, nSequence, szData );
+}
+
+int CControlCenter::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
 {
 	int nRet = -1;
 	int nBody_len = 0;
@@ -562,7 +536,7 @@ int CControlCenter::cmpInitialResponse(int nSocket, int nSequence, const char * 
 
 	memset( &packet, 0, sizeof(CMP_PACKET) );
 
-	cmpParser->formatHeader( initial_response, STATUS_ROK, nSequence, &pHeader );
+	cmpParser->formatHeader( nCommandId, STATUS_ROK, nSequence, &pHeader );
 	memcpy( pIndex, szData, strlen( szData ) );
 	pIndex += strlen( szData );
 	nBody_len += strlen( szData );
@@ -574,16 +548,16 @@ int CControlCenter::cmpInitialResponse(int nSocket, int nSequence, const char * 
 	packet.cmpHeader.command_length = htonl( nTotal_len );
 
 	nRet = cmpServer->socketSend( nSocket, &packet, nTotal_len );
-	printPacket( initial_response, STATUS_ROK, nSequence, nRet, "[Center]", mConfig.strLogPath.c_str(), nSocket );
+	printPacket( nCommandId, STATUS_ROK, nSequence, nRet, "[Center]", mConfig.strLogPath.c_str(), nSocket );
 
 	string strLog;
 	if ( 0 >= nRet )
 	{
-		strLog = "Send Initial response fail, socket:" + ConvertToString( nSocket );
+		strLog = "CMP Response fail, socket:" + ConvertToString( nSocket );
 	}
 	else
 	{
-		strLog = "Send Initial response success, data:" + ConvertToString( szData );
+		strLog = "CMP Response success, data:" + ConvertToString( szData );
 	}
 	printLog( strLog.c_str(), "[Center]", mConfig.strLogPath.c_str() );
 
