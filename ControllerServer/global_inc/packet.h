@@ -137,8 +137,8 @@ unbind_response, "unbind_response" )( update_request, "update_request" )( update
 		"reboot_response" )( config_request, "config_request" )( config_response, "config_response" )( power_port_request, "power_port_request" )( power_port_response,
 		"power_port_response" )( power_port_state_request, "power_port_state_request" )( power_port_state_response, "power_port_state_response" )( initial_request,
 		"initial_request" )( initial_response, "initial_response" )( sign_up_request, "sign_up_request" )( sign_up_response, "sign_up_response" )( mdm_login_request,
-		"ser_mdm_login_request" )( mdm_login_response, "ser_mdm_login_response" )( mdm_operate_request, "ser_mdm_operate_request" )( mdm_operate_response,
-		"ser_mdm_operate_response" );
+		"mdm_login_request" )( mdm_login_response, "mdm_login_response" )( mdm_operate_request, "mdm_operate_request" )( mdm_operate_response,
+		"mdm_operate_response" );
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error" )( STATUS_RINVMSGLEN, "Message Length is invalid" )( STATUS_RINVCMDLEN,

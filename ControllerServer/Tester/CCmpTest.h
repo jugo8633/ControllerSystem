@@ -20,10 +20,12 @@ class CCmpTest
 		void cmpAccessLogRequest();
 		void cmpPressure();
 		void cmpMdmLogin();
+		void cmpMdmOperate();
 		int sendRequest(const int nCommandId, void *pRespBuf);
 		void connectCenter(const std::string strIP, const int nPort);
 
 	private:
 		int mSocket;
 		int formatPacket(int nCommand, void **pPacket, int nSequence);
+		std::string mstrToken;
 };
