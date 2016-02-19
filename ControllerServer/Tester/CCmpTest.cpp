@@ -336,6 +336,44 @@ void CCmpTest::cmpPressure()
 
 	while (1)
 	{
+		nPacketLen = formatPacket( mdm_login_request, &pbuf, getSequence());
+		nRet = send(mSocket, pbuf, nPacketLen, 0);
+		if (nPacketLen == nRet)
+		{
+			pHeader = (CMP_HEADER *) pbuf;
+			std::time_t t = std::time( NULL);
+			memset(mbstr, 0, sizeof(mbstr));
+			std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
+			printf("%s - CMP Send Request: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, ntohl(pHeader->command_id), ntohl(pHeader->command_length),
+					ntohl(pHeader->command_status), ntohl(pHeader->sequence_number));
+
+			memset(buf, 0, sizeof(buf));
+			nRet = recv(mSocket, pbuf, MAX_DATA_LEN, MSG_NOSIGNAL);
+			pHeader = (CMP_HEADER *) pbuf;
+			int nCommand = (ntohl(pHeader->command_id)) & 0x000000FF;
+			int nLength = ntohl(pHeader->command_length);
+			int nStatus = ntohl(pHeader->command_status);
+			int nSequence = ntohl(pHeader->sequence_number);
+			memset(mbstr, 0, sizeof(mbstr));
+			std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
+			printf("%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength, nStatus, nSequence);
+		}
+		sleep(0.001);
+	}
+}
+
+void CCmpTest::ioPressure()
+{
+	int nPacketLen = 0;
+	int nRet = 0;
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+	CMP_HEADER *pHeader;
+	char mbstr[100];
+
+	while (1)
+	{
 		nPacketLen = formatPacket( enquire_link_request, &pbuf, getSequence());
 		nRet = send(mSocket, pbuf, nPacketLen, 0);
 		if (nPacketLen == nRet)
@@ -358,6 +396,6 @@ void CCmpTest::cmpPressure()
 			std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
 			printf("%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength, nStatus, nSequence);
 		}
-		sleep(0.1);
+		sleep(0.001);
 	}
 }

@@ -16,6 +16,7 @@ class CMdmHandler
 		static CMdmHandler *getInstance();
 		virtual ~CMdmHandler();
 		std::string login(std::string strAccount, std::string strPassword);
+		std::string operate(std::string strToken, std::string strDeviceId);
 
 	private:
 		explicit CMdmHandler();

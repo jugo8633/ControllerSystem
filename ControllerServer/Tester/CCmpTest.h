@@ -19,6 +19,7 @@ class CCmpTest
 		void cmpEnquireLinkRequest();
 		void cmpAccessLogRequest();
 		void cmpPressure();
+		void ioPressure();
 		void cmpMdmLogin();
 		void cmpMdmOperate();
 		int sendRequest(const int nCommandId, void *pRespBuf);

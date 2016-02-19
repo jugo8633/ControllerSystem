@@ -19,10 +19,11 @@
 #include "CCmpTest.h"
 #include "utility.h"
 
-#define BUFSIZE 		1024
-#define BYE					555
-#define PRESSURE		666
-#define HELP				777
+#define BUFSIZE 			1024
+#define BYE						555
+#define PRESSURE			666
+#define HELP					777
+#define IO_PRESSURE	888
 
 using namespace std;
 
@@ -43,7 +44,7 @@ int main(int argc, char* argv[])
 	static map<string, int> mapCommand = create_map<string, int>("bye", BYE)("help", HELP)("pressure", PRESSURE)("mdm operate", mdm_operate_request)("cmp init", initial_request)(
 			"cmp signup",
 			sign_up_request)("cmp enquire", enquire_link_request)("cmp access", access_log_request)("mdm login", mdm_login_request)("mdm operate",
-	mdm_operate_request);
+	mdm_operate_request)("io", IO_PRESSURE);
 
 	printf("This process is a Control Center testing process!.\n");
 
@@ -121,6 +122,9 @@ int main(int argc, char* argv[])
 					break;
 				case mdm_operate_request:
 					cmpTest->cmpMdmOperate();
+					break;
+				case IO_PRESSURE:
+					cmpTest->ioPressure();
 					break;
 				default:
 					printf("Unknow command, use help to show valid command.\n");
