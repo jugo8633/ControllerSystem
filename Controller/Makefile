@@ -25,7 +25,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
-			-lm -lrt -ldl
+			-lm -lrt -ldl \
+			-lsqlite3
 			
 vpath %.cpp $(SRC_DIR)
 
@@ -41,7 +42,7 @@ endef
 .IGNORE: clean
 
 all: checkdirs lib bin/$(TARGET)
-	@cp $(DIR_APP_ROOT)center.conf $(DIR_APP_ROOT)bin
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 
@@ -94,6 +95,7 @@ package-s:
 	@echo "\n"
 	
 package-u:
+	apt-get -y install sqlite3 libsqlite3-dev
 	apt-get -y install build-essential
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"

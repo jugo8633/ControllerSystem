@@ -25,7 +25,6 @@ typedef struct
 
 class CSocketServer;
 class CSocketClient;
-class CAreawell;
 class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
@@ -55,7 +54,6 @@ class Controller: public CObject
 		int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
-		int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
 		void setUnbindState(int nSocketFD);
 
@@ -70,7 +68,6 @@ class Controller: public CObject
 		CONFIG mConfig;
 		CSocketServer *cmpServer;		// controller message protocol server
 		CSocketClient *cmpClient;		// controller message protocol client
-		CAreawell *areawell;
 		CCmpHandler *cmpParser;
 		CSqliteHandler *sqlite;
 		CThreadHandler *tdEnquireLink;

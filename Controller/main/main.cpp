@@ -45,7 +45,7 @@ int Watching()
 	pid_t w;
 	int status;
 
-	openlog( "ControllerClient", LOG_PID, LOG_LOCAL0 );
+	openlog( "Controller", LOG_PID, LOG_LOCAL0 );
 
 	do
 	{
@@ -63,6 +63,7 @@ int Watching()
 			signal( SIGINT, CSigHander );
 			signal( SIGTERM, CSigHander );
 			signal( SIGPIPE, SIG_IGN );
+			syslog( LOG_INFO, "controller child process has been invoked" );
 			return 0;
 		}
 
@@ -102,6 +103,7 @@ int Watching()
 	}
 	while ( SIGTERM != WTERMSIG( status ) && !flag );
 
+	syslog( LOG_INFO, "controller child process has been terminated" );
 	closelog();
 	exit( EXIT_SUCCESS );
 	return 1;

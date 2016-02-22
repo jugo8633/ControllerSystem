@@ -1,12 +1,14 @@
 export MODULES=global_inc \
 			 main \
-			 controller \
+			 cmpHandler \
 			 configHandler	\
+			 controller \
+			 dataHandler	\
 			 messageHandler	\
 			 objectHandler	\
 			 socketHandler	\
-			 threadHandler	\
-			 dataHandler	\
-			 cmpHandler
+			 sqliteHandler \
+			 threadHandler
+			 
 			 
 export EXT_MODULES=extInclude
