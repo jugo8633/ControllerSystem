@@ -62,7 +62,9 @@ int CSignup::insert(string strJSON)
 
 				if ( cJSON_GetObjectItem( root, "phone" ) )
 				{
-					strPhone = cJSON_GetObjectItem( root, "phone" )->valuestring;
+					int ntype = cJSON_GetObjectItem( root, "phone" )->type;
+					if ( cJSON_String == ntype )
+						strPhone = cJSON_GetObjectItem( root, "phone" )->valuestring;
 				}
 
 				if ( cJSON_GetObjectItem( root, "fb_id" ) )

@@ -28,6 +28,7 @@ class CSocketClient;
 class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
+class ClientHandler;
 
 class Controller: public CObject
 {
@@ -40,13 +41,15 @@ class Controller: public CObject
 		void stopServer();
 		int connectCenter();
 		void runEnquireLinkRequest();
+		void receiveCenterCMP(int nServerFD, int nDataLen, const void *pData);
+		void receiveClientCMP(int nClientFD, int nDataLen, const void *pData);
 
 	protected:
 		void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
 	private:
 		Controller();
-		void onCMP(int nClientFD, int nDataLen, const void *pData);
+		void onClientCMP(int nClientFD, int nDataLen, const void *pData);
 		void onCenterCMP(int nServerFD, int nDataLen, const void *pData);
 		int sendCommandtoCenter(int nCommand, int nStatus, int nSequence, bool isResp);
 		void ackPacket(int nClientSocketFD, int nCommand, const void * pData);
@@ -55,6 +58,7 @@ class Controller: public CObject
 		int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpEnquireLink(int nSocket, int nCommand, int nSequence, const void *pData);
 		void setUnbindState(int nSocketFD);
 
 		/** Send Request to Control Center **/
@@ -71,6 +75,7 @@ class Controller: public CObject
 		CCmpHandler *cmpParser;
 		CSqliteHandler *sqlite;
 		CThreadHandler *tdEnquireLink;
+		ClientHandler *clientHandler;
 		std::vector<int> vEnquireLink;
 
 		typedef int (Controller::*MemFn)(int, int, int, const void *);

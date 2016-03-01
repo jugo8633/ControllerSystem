@@ -11,4 +11,4 @@ export MODULES=global_inc \
 			 threadHandler
 			 
 			 
-export EXT_MODULES=extInclude
+export EXT_MODULES=

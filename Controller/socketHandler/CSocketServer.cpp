@@ -17,6 +17,7 @@
 #include "common.h"
 #include "CDataHandler.cpp"
 #include "packet.h"
+#include "IReceiver.h"
 
 void *threadSocketMessageReceive(void *argv);
 void *threadSocketAccept(void *argv);
@@ -255,20 +256,22 @@ int CSocketServer::runSMSHandler(int nClientFD)
 		if ( sizeof(CMP_HEADER) == result )
 		{
 			nTotalLen = ntohl( cmpPacket.cmpHeader.command_length );
-			nCommand = ntohl( cmpPacket.cmpHeader.command_id );
-			nSequence = ntohl( cmpPacket.cmpHeader.sequence_number );
-			if ( enquire_link_request == nCommand )
-			{
-				memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
-				nCommandResp = generic_nack | nCommand;
-				cmpHeader.command_id = htonl( nCommandResp );
-				cmpHeader.command_status = htonl( STATUS_ROK );
-				cmpHeader.sequence_number = htonl( nSequence );
-				cmpHeader.command_length = htonl( sizeof(CMP_HEADER) );
-				socketSend( nClientFD, &cmpHeader, sizeof(CMP_HEADER) );
-				_DBG( "[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD );
-				continue;
-			}
+			/*
+			 nCommand = ntohl( cmpPacket.cmpHeader.command_id );
+			 nSequence = ntohl( cmpPacket.cmpHeader.sequence_number );
+			 if ( enquire_link_request == nCommand )
+			 {
+			 memset( &cmpHeader, 0, sizeof(CMP_HEADER) );
+			 nCommandResp = generic_nack | nCommand;
+			 cmpHeader.command_id = htonl( nCommandResp );
+			 cmpHeader.command_status = htonl( STATUS_ROK );
+			 cmpHeader.sequence_number = htonl( nSequence );
+			 cmpHeader.command_length = htonl( sizeof(CMP_HEADER) );
+			 socketSend( nClientFD, &cmpHeader, sizeof(CMP_HEADER) );
+			 _DBG( "[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD );
+			 continue;
+			 }
+			 */
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 			if ( 0 < nBodyLen )
@@ -326,7 +329,8 @@ int CSocketServer::runSMSHandler(int nClientFD)
 		if ( externalEvent.isValid() )
 		{
 			//	_DBG("[Socket Server] Send Message : FD=%d len=%d", nFD, result);
-			sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, nTotalLen, &cmpPacket );
+			//sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, nTotalLen, &cmpPacket );
+			ServerReceive( nFD, nTotalLen, &cmpPacket );
 		}
 		else
 		{

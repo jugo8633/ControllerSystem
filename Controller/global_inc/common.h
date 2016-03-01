@@ -1,9 +1,12 @@
 #pragma once
 
 #include <stdio.h>
+#include <string>
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
+
+static std::string G_LOG_PATH;
 
 #ifdef __cplusplus
 extern "C"

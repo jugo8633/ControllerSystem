@@ -7,6 +7,7 @@
 
 #include "CSocketClient.h"
 #include "CThreadHandler.h"
+#include "IReceiver.h"
 #include "packet.h"
 
 int CSocketClient::m_nInternalEventFilter = 6000;
@@ -137,7 +138,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 		if ( sizeof(CMP_HEADER) == result )
 		{
 			nTotalLen = ntohl( cmpPacket.cmpHeader.command_length );
-			nCommand = ntohl( cmpPacket.cmpHeader.command_id );
+	/*		nCommand = ntohl( cmpPacket.cmpHeader.command_id );
 			nSequence = ntohl( cmpPacket.cmpHeader.sequence_number );
 			if ( enquire_link_request == nCommand )
 			{
@@ -152,6 +153,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				_DBG( "[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD );
 				continue;
 			}
+	*/
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 			if ( 0 < nBodyLen )
@@ -194,7 +196,8 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 		if ( externalEvent.isValid() )
 		{
 			//	_DBG("[Socket Server] Send Message : FD=%d len=%d", nFD, result);
-			sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nSocketFD, nTotalLen, &cmpPacket );
+			ClientReceive( nSocketFD, nTotalLen, &cmpPacket );
+			//sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nSocketFD, nTotalLen, &cmpPacket );
 		}
 		else
 		{

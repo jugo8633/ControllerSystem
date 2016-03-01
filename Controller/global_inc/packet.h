@@ -137,8 +137,7 @@ unbind_response, "unbind_response" )( update_request, "update_request" )( update
 		"reboot_response" )( config_request, "config_request" )( config_response, "config_response" )( power_port_request, "power_port_request" )( power_port_response,
 		"power_port_response" )( power_port_state_request, "power_port_state_request" )( power_port_state_response, "power_port_state_response" )( initial_request,
 		"initial_request" )( initial_response, "initial_response" )( sign_up_request, "sign_up_request" )( sign_up_response, "sign_up_response" )( mdm_login_request,
-		"mdm_login_request" )( mdm_login_response, "mdm_login_response" )( mdm_operate_request, "mdm_operate_request" )( mdm_operate_response,
-		"mdm_operate_response" );
+		"mdm_login_request" )( mdm_login_response, "mdm_login_response" )( mdm_operate_request, "mdm_operate_request" )( mdm_operate_response, "mdm_operate_response" );
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error" )( STATUS_RINVMSGLEN, "Message Length is invalid" )( STATUS_RINVCMDLEN,
@@ -234,5 +233,17 @@ inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPa
 inline void printLog(string strMsg, string strDesc, string strLogPath = 0)
 {
 	printLog( strMsg.c_str(), strDesc.c_str(), strLogPath.c_str() );
+}
+
+/**
+ *  sequence for request
+ */
+static int msnSequence = 0x00000000;
+__attribute__ ((unused)) static int getSerialSequence()
+{
+	++msnSequence;
+	if ( 0x7FFFFFFF <= msnSequence )
+		msnSequence = 0x00000001;
+	return msnSequence;
 }
 

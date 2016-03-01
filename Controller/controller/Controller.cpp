@@ -17,32 +17,40 @@
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
+#include "IReceiver.h"
 #include <map>
+#include "ClientHandler.h"
 
 using namespace std;
 
 static Controller * controller = 0;
-
-/**
- *  sequence for request
- */
-static int msnSequence = 0x00000000;
-static int getSequence()
-{
-	++msnSequence;
-	if ( 0x7FFFFFFF <= msnSequence )
-		msnSequence = 0x00000001;
-	return msnSequence;
-}
 
 map<string, string> mapWire;
 
 /** Enquire link function declare for enquire link thread **/
 void *threadEnquireLinkRequest(void *argv);
 
+/**
+ * Define Socket Client ReceiveFunction
+ */
+int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
+{
+	controller->receiveCenterCMP( nSocketFD, nDataLen, pData );
+	return 0;
+}
+
+/**
+ *  Define Socket Server Receive Function
+ */
+int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
+{
+	controller->receiveClientCMP( nSocketFD, nDataLen, pData );
+	return 0;
+}
+
 Controller::Controller() :
 		CObject(), cmpServer( new CSocketServer ), cmpClient( new CSocketClient ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink(
-				new CThreadHandler )
+				new CThreadHandler ), clientHandler( ClientHandler::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -51,6 +59,7 @@ Controller::Controller() :
 	cmpRequest[bind_request] = &Controller::cmpBind;
 	cmpRequest[unbind_request] = &Controller::cmpUnbind;
 	cmpRequest[access_log_request] = &Controller::cmpAccessLog;
+	cmpRequest[enquire_link_request] = &Controller::cmpEnquireLink;
 }
 
 Controller::~Controller()
@@ -82,7 +91,7 @@ int Controller::init(std::string strConf)
 		return FALSE;
 	}
 
-	mConfig.strLogPath = config->getValue( "LOG", "log" );
+	G_LOG_PATH = mConfig.strLogPath = config->getValue( "LOG", "log" );
 	if ( mConfig.strLogPath.empty() )
 	{
 		mConfig.strLogPath = "controller.log";
@@ -102,11 +111,6 @@ int Controller::init(std::string strConf)
 	mConfig.strCenterServerIP = config->getValue( "CENTER", "ip" );
 	mConfig.strCenterServerPort = config->getValue( "CENTER", "port" );
 	_DBG( "[Controller] Control Center IP:%s Port:%s", mConfig.strCenterServerIP.c_str(), mConfig.strCenterServerPort.c_str() )
-
-	string strQrPath = config->getValue( "SERVER", "qr" );
-	if ( strQrPath.empty() )
-		strQrPath = "/data/qr/mac.png";
-	mkdirp( strQrPath );
 
 	delete config;
 
@@ -130,12 +134,10 @@ int Controller::init(std::string strConf)
 
 void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-//	_DBG( "[Controller] Receive Message : event=%d command=%d id=%lu data_len=%d", nEvent, nCommand, nId, nDataLen );
-
 	switch ( nCommand )
 	{
 		case EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE:
-			onCMP( nId, nDataLen, pData );
+			onClientCMP( nId, nDataLen, pData );
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:
 			_DBG( "[Controller] Socket Client FD:%d Connected", (int )nId )
@@ -226,12 +228,14 @@ int Controller::connectCenter()
 	if ( cmpClient->isValidSocketFD() )
 	{
 		_DBG( "[Controller] Connect Center Success." )
+		clientHandler->setClientSocket( cmpClient );
 		nRet = cmpBindRequest( cmpClient->getSocketfd() );
 	}
 	else
 	{
 		_DBG( "[Controller] Connect Center Fail." )
 	}
+
 	return nRet;
 }
 
@@ -272,7 +276,7 @@ int Controller::cmpBindRequest(const int nSocket)
 
 	memset( &packet, 0, sizeof(CMP_PACKET) );
 
-	cmpParser->formatHeader( bind_request, STATUS_ROK, getSequence(), &pHeader );
+	cmpParser->formatHeader( bind_request, STATUS_ROK, getSerialSequence(), &pHeader );
 
 	memcpy( pIndex, mConfig.strMAC.c_str(), mConfig.strMAC.length() );
 	pIndex += mConfig.strMAC.length();
@@ -303,7 +307,7 @@ int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, st
 
 	memset( &packet, 0, sizeof(CMP_PACKET) );
 
-	cmpParser->formatHeader( access_log_request, STATUS_ROK, getSequence(), &pHeader );
+	cmpParser->formatHeader( access_log_request, STATUS_ROK, getSerialSequence(), &pHeader );
 
 	memcpy( pIndex, strType.c_str(), strType.length() );
 	pIndex += strType.length();
@@ -422,6 +426,11 @@ int Controller::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *
 	return 0;
 }
 
+int Controller::cmpEnquireLink(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	return sendCommandtoCenter( nCommand, STATUS_ROK, nSequence, true );
+}
+
 int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	CDataHandler<std::string> rData;
@@ -452,7 +461,7 @@ void Controller::setUnbindState(int nSocketFD)
 /**
  * 	Receive CMP from Client
  */
-void Controller::onCMP(int nClientFD, int nDataLen, const void *pData)
+void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 {
 	_DBG( "[Controller] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen )
 
@@ -484,6 +493,16 @@ void Controller::onCMP(int nClientFD, int nDataLen, const void *pData)
 	}
 
 	(this->*this->cmpRequest[cmpHeader.command_id])( nClientFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket );
+}
+
+void Controller::receiveCenterCMP(int nServerFD, int nDataLen, const void *pData)
+{
+	onCenterCMP( nServerFD, nDataLen, pData );
+}
+
+void Controller::receiveClientCMP(int nClientFD, int nDataLen, const void *pData)
+{
+	onClientCMP( nClientFD, nDataLen, pData );
 }
 
 /**
@@ -524,7 +543,7 @@ void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
 
 int Controller::cmpEnquireLinkRequest(const int nSocketFD)
 {
-	return sendCommandtoClient( nSocketFD, enquire_link_request, STATUS_ROK, getSequence(), false );
+	return sendCommandtoClient( nSocketFD, enquire_link_request, STATUS_ROK, getSerialSequence(), false );
 }
 
 void Controller::runEnquireLinkRequest()
