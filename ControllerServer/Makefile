@@ -43,7 +43,7 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-.IGNORE: clean
+.IGNORE: clean cleanAll
 
 all: checkdirs package-u mongoDB lib bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)center.conf $(DIR_APP_ROOT)bin

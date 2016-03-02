@@ -104,6 +104,20 @@ int CSignup::insert(string strJSON)
 					nRet = INSERT_SUCCESS;
 				}
 			}
+			else
+			{
+				if ( !strLogPath.empty() )
+				{
+					printLog( "Invalid app_id , " + strJSON, "[Sign up Parse Fail]", strLogPath );
+				}
+			}
+		}
+		else
+		{
+			if ( !strLogPath.empty() )
+			{
+				printLog( "Invalid id , " + strJSON, "[Sign up Parse Fail]", strLogPath );
+			}
 		}
 		cJSON_Delete( root );
 	}
