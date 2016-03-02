@@ -46,7 +46,7 @@ endef
 .IGNORE: clean cleanAll
 
 all: checkdirs package-u mongoDB lib bin/$(TARGET)
-	@cp $(DIR_APP_ROOT)center.conf $(DIR_APP_ROOT)bin
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 

@@ -11,14 +11,14 @@ mongod
 mongo
 
 # Run mongodb access shell
-use center
+use access
 #db.auth("admin","admin")
-db.access.find()				// query record
-db.access.remove({})			// remove all record
+db.mobile.find()				// query record
+db.mobile.remove({})			// remove all record
 
 
 [sqlite]
-sqlite xxxx.db
+sqlite3 xxxx.db
 
 
 [Socket]

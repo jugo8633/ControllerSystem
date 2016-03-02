@@ -37,7 +37,7 @@ int CSignup::insert(string strJSON)
 	if ( root )
 	{
 		cJSON *tag = cJSON_GetObjectItem( root, "id" );
-		if ( tag )
+		if ( tag && (cJSON_String == tag->type) )
 		{
 			if ( isExist( tag->valuestring ) )
 			{
@@ -46,53 +46,51 @@ int CSignup::insert(string strJSON)
 			}
 			string strId = tag->valuestring;
 			tag = cJSON_GetObjectItem( root, "app_id" );
-			if ( tag )
+			if ( tag && (cJSON_String == tag->type) )
 			{
 				string strAppId = tag->valuestring;
 				string strMac, strOs, strPhone, strFbId, strFbName, strFbEmail, strFbAccount, strGAccount, strTAccount;
-				if ( cJSON_GetObjectItem( root, "mac" ) )
+				if ( cJSON_GetObjectItem( root, "mac" ) && (cJSON_String == cJSON_GetObjectItem( root, "mac" )->type) )
 				{
 					strMac = cJSON_GetObjectItem( root, "mac" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "os" ) )
+				if ( cJSON_GetObjectItem( root, "os" ) && (cJSON_String == cJSON_GetObjectItem( root, "os" )->type) )
 				{
 					strOs = cJSON_GetObjectItem( root, "os" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "phone" ) )
+				if ( cJSON_GetObjectItem( root, "phone" ) && (cJSON_String == cJSON_GetObjectItem( root, "phone" )->type) )
 				{
-					int ntype = cJSON_GetObjectItem( root, "phone" )->type;
-					if ( cJSON_String == ntype )
-						strPhone = cJSON_GetObjectItem( root, "phone" )->valuestring;
+					strPhone = cJSON_GetObjectItem( root, "phone" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_id" ) )
+				if ( cJSON_GetObjectItem( root, "fb_id" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_id" )->type) )
 				{
 					strFbId = cJSON_GetObjectItem( root, "fb_id" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_name" ) )
+				if ( cJSON_GetObjectItem( root, "fb_name" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_name" )->type) )
 				{
 					strFbName = cJSON_GetObjectItem( root, "fb_name" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_email" ) )
+				if ( cJSON_GetObjectItem( root, "fb_email" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_email" )->type) )
 				{
 					strFbEmail = cJSON_GetObjectItem( root, "fb_email" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_account" ) )
+				if ( cJSON_GetObjectItem( root, "fb_account" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_account" )->type) )
 				{
 					strFbAccount = cJSON_GetObjectItem( root, "fb_account" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "g_account" ) )
+				if ( cJSON_GetObjectItem( root, "g_account" ) && (cJSON_String == cJSON_GetObjectItem( root, "g_account" )->type) )
 				{
 					strGAccount = cJSON_GetObjectItem( root, "g_account" )->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "t_account" ) )
+				if ( cJSON_GetObjectItem( root, "t_account" ) && (cJSON_String == cJSON_GetObjectItem( root, "t_account" )->type) )
 				{
 					strTAccount = cJSON_GetObjectItem( root, "t_account" )->valuestring;
 				}

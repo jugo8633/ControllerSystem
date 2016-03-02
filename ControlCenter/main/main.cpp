@@ -149,9 +149,20 @@ void runService(int argc, char* argv[])
 {
 	options( argc, argv );
 
+	std::string strArgv;
+	std::string strConf;
+
+	strArgv = argv[0];
+
+	size_t found = strArgv.find_last_of( "/\\" );
+	std::string strProcessName = strArgv.substr( ++found );
+
+	strConf = strProcessName + ".conf";
+	_DBG( "Config file is:%s", strConf.c_str() )
+
 	CControlCenter *controlCenter = CControlCenter::getInstance();
 
-	if ( controlCenter->init( "center.conf" ) && -1 != controlCenter->initMessage( MSG_ID ) )
+	if ( controlCenter->init( strConf ) && -1 != controlCenter->initMessage( MSG_ID ) )
 	{
 		if ( controlCenter->startServer() )
 		{
