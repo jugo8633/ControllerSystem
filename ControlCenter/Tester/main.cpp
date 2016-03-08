@@ -41,32 +41,32 @@ int main(int argc, char* argv[])
 	struct epoll_event events[5];         // Used for EPOLL.
 	int noEvents;               						// EPOLL event number.
 
-	static map<string, int> mapCommand = create_map<string, int>("bye", BYE)("help", HELP)("pressure", PRESSURE)("mdm operate", mdm_operate_request)("cmp init", initial_request)(
-			"cmp signup",
-			sign_up_request)("cmp enquire", enquire_link_request)("cmp access", access_log_request)("mdm login", mdm_login_request)("mdm operate",
-	mdm_operate_request)("io", IO_PRESSURE);
+	static map<string, int> mapCommand = create_map<string, int>( "bye", BYE )( "help", HELP )( "pressure", PRESSURE )( "mdm operate", mdm_operate_request )( "cmp init",
+	initial_request )( "cmp signup",
+	sign_up_request )( "cmp enquire", enquire_link_request )( "cmp access", access_log_request )( "mdm login", mdm_login_request )( "mdm operate",
+	mdm_operate_request )( "io", IO_PRESSURE )( "cmp pwstate", power_port_state_request )( "cmp pwset", power_port_set_request );
 
-	printf("This process is a Control Center testing process!.\n");
+	printf( "This process is a Control Center testing process!.\n" );
 
-	if (argc < 3)
+	if ( argc < 3 )
 	{
-		fprintf( stderr, "Usage:  %s <IP> <Remote Port>  ...\n", argv[0]);
-		exit(1);
+		fprintf( stderr, "Usage:  %s <IP> <Remote Port>  ...\n", argv[0] );
+		exit( 1 );
 	}
 
 	strIP = argv[1];
-	nPort = atoi(argv[2]);
-	printf("Center IP:%s Port:%d.\n", strIP.c_str(), nPort);
+	nPort = atoi( argv[2] );
+	printf( "Center IP:%s Port:%d.\n", strIP.c_str(), nPort );
 
 	CCmpTest *cmpTest = new CCmpTest();
-	cmpTest->connectCenter(strIP, nPort);
+	cmpTest->connectCenter( strIP, nPort );
 
-	epfd = epoll_create(5);
+	epfd = epoll_create( 5 );
 
 	// Add STDIN into the EPOLL set.
 	ev.data.fd = STDIN_FILENO;
 	ev.events = EPOLLIN | EPOLLET;
-	epoll_ctl(epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev);
+	epoll_ctl( epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev );
 	string strInput;
 
 	/*	cout << "Map size: " << mapCommand.size() << endl;
@@ -75,29 +75,29 @@ int main(int argc, char* argv[])
 	 cout << (*i).first << ": " << (*i).second << endl;
 	 }
 	 */
-	while (running)
+	while ( running )
 	{
-		noEvents = epoll_wait(epfd, events, FD_SETSIZE, -1);
-		for (i = 0; i < noEvents; ++i)
+		noEvents = epoll_wait( epfd, events, FD_SETSIZE, -1 );
+		for ( i = 0; i < noEvents ; ++i )
 		{
-			memset(buffer, 0, BUFSIZE);
-			fgets(buffer, 1024, stdin);
-			strInput = trim(buffer);
+			memset( buffer, 0, BUFSIZE );
+			fgets( buffer, 1024, stdin );
+			strInput = trim( buffer );
 
 			//		strInput.erase(0, strInput.find_first_not_of(" \n\r\t"));
 			//		strInput.erase(strInput.find_last_not_of(" \n\r\t") + 1);
 
 			nCommand = mapCommand[strInput];
 			//	printf("get command: %d from input: %s size: %d\n", nCommand, strInput.c_str(), (int)strInput.length());
-			switch (nCommand)
+			switch ( nCommand )
 			{
 				case BYE:
-					printf("Bye.\n");
+					printf( "Bye.\n" );
 					running = 0;
 					break;
 				case HELP:
-					printf("Test CMP Use:\n");
-					for (map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
+					printf( "Test CMP Use:\n" );
+					for ( map<string, int>::iterator i = mapCommand.begin() ; i != mapCommand.end() ; ++i )
 					{
 						cout << (*i).first << endl;
 					}
@@ -126,15 +126,21 @@ int main(int argc, char* argv[])
 				case IO_PRESSURE:
 					cmpTest->ioPressure();
 					break;
+				case power_port_state_request:
+					cmpTest->cmpPowerState();
+					break;
+				case power_port_set_request:
+					cmpTest->cmpPowerSet();
+					break;
 				default:
-					printf("Unknow command, use help to show valid command.\n");
+					printf( "Unknow command, use help to show valid command.\n" );
 					break;
 			}
 		}
 	}
 
 	delete cmpTest;
-	close(epfd);
+	close( epfd );
 	return 0;
 }
 
