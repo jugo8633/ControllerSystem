@@ -291,9 +291,9 @@ string CAreawell::getPortStatus(string strIP)
 {
 	string strRet;
 
-	startUdpServer();
+//	startUdpServer();
 	strRet = sendCommand( strIP, STATE_PORT_GET );
-	stopUdpServer();
+//	stopUdpServer();
 	return strRet;
 }
 

@@ -213,11 +213,13 @@ int Controller::startServer()
 		return FALSE;
 	}
 
+	areawell->startUdpServer();
 	return TRUE;
 }
 
 void Controller::stopServer()
 {
+	areawell->stopUdpServer();
 	if ( tdEnquireLink )
 	{
 		tdEnquireLink->threadExit();
@@ -231,6 +233,8 @@ void Controller::stopServer()
 		delete cmpServer;
 		cmpServer = 0;
 	}
+
+	_DBG( "[Controller] Stop Server Finish" )
 }
 
 int Controller::connectCenter()
