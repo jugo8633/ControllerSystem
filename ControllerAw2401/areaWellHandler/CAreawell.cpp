@@ -271,6 +271,8 @@ string CAreawell::sendCommand(std::string strIP, std::string strCommand)
 					{
 						strRecv = buffer;
 						printf( "[Areawell] %s Response:%s\n", inet_ntoa( cliaddr.sin_addr ), strRecv.c_str() );
+						close( epfd );
+						return strRecv;
 						break;
 					}
 				}

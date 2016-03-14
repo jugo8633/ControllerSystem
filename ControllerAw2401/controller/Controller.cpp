@@ -163,7 +163,7 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:
 			_DBG( "[Controller] Socket Client FD:%d Connected", (int )nId )
-			cmpServer->socketSend( nId, "welcome", 7 );
+			//cmpServer->socketSend( nId, "welcome", 7 );
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
 			setUnbindState( (int) nId );
@@ -511,7 +511,7 @@ int Controller::cmpPowerPortState(int nSocket, int nCommand, int nSequence, cons
 		else
 		{
 			_DBG( "[Controller] Get Power state Fail FD:%d", nSocket )
-			sendCommandtoClient( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+			sendCommandtoClient( nSocket, nCommand, STATUS_RPPSTAFAIL, nSequence, true );
 		}
 	}
 	else
