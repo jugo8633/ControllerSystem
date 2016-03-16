@@ -152,7 +152,7 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 					pBody += nStrLen;
 				}
 				break;
-			case power_port_request:
+			case power_port_set_request:
 				memset(temp, 0, sizeof(temp));
 				memcpy(temp, pBody, 1);
 				++pBody;

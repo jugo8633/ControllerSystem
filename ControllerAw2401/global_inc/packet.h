@@ -235,3 +235,15 @@ inline void printLog(string strMsg, string strDesc, string strLogPath = 0)
 	printLog( strMsg.c_str(), strDesc.c_str(), strLogPath.c_str() );
 }
 
+/**
+ *  sequence for request
+ */
+static int msnSequence = 0x00000000;
+__attribute__ ((unused)) static int getSerialSequence()
+{
+	++msnSequence;
+	if ( 0x7FFFFFFF <= msnSequence )
+		msnSequence = 0x00000001;
+	return msnSequence;
+}
+
