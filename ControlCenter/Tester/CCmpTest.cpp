@@ -274,7 +274,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	memset( packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata) );
 
 	string strControllerId = "123456789";
-	string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS\",\"station\":334,\"serial\":1347}";
+	string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS爛機器\",\"station\":334,\"serial\":1347}";
 	string strSignup =
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 	string strMdmAccount = "testing@iii.org.tw";

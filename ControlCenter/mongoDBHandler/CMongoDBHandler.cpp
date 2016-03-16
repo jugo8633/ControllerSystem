@@ -10,8 +10,8 @@
 #include <cstdlib>
 #include <string>
 #include <map>
+#include <memory>
 #include <mongo/client/dbclient.h>
-
 #include "common.h"
 #include "CMongoDBHandler.h"
 
@@ -175,5 +175,53 @@ int CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::s
 bool CMongoDBHandler::isValid()
 {
 	return !DBconn->isFailed();
+}
+
+int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition)
+{
+	if ( !isValid() )
+		return FAIL;
+
+	string strCon = strDB + "." + strCollection;
+
+	try
+	{
+		BSONArrayBuilder display_ids;
+		//display_ids.append( mongo::OID( "5061f915e4b045bab5e0c957" ) );
+		display_ids.append( strCondition );
+
+		BSONObjBuilder in_condition;
+		in_condition.append( "$in", display_ids.arr() );
+
+		BSONObjBuilder message_condition;
+		message_condition.append( strField, in_condition.obj() );
+		//message_condition.append("status", "sending");
+
+		BSONObjBuilder sortBuilder;
+		sortBuilder.append( "_id", 1 );
+
+		mongo::Query query( message_condition.obj() );
+		mongo::Query query2( query );
+		mongo::Query query_with_sort( query.sort( sortBuilder.obj() ) );
+
+		//	BSONObjBuilder update_field;
+		//	update_field.append( "status", "waiting" );
+		//BSONObjBuilder set_field;
+		//set_field.append( "$set", update_field.obj() );
+		//session.update( "mydb.mycoll", query2, set_field.obj(), false, true );
+		//con.done();
+
+		auto_ptr<DBClientCursor> cursor = DBconn->query( strCon, query2 );
+		while ( cursor->more() )
+			cout << cursor->next().toString() << endl;
+
+	}
+	catch ( const exception &e )
+	{
+		_DBG( "[Mongodb] Query Data Fail, Error:%s", e.what() );
+		return FAIL;
+	}
+
+	return SUCCESS;
 }
 

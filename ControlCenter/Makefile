@@ -23,6 +23,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
+			-I/usr/include/mongo \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lmongoclient \
@@ -30,8 +31,9 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lboost_system \
 			-lboost_filesystem \
 			-lboost_regex \
+			-lboost_program_options \
 			-lsqlite3
-			
+					
 vpath %.cpp $(SRC_DIR)
 
 define make-goal
