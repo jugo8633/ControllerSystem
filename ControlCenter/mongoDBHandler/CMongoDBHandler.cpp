@@ -147,7 +147,9 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 
 	string strCon = strDB + "." + strCollection;
 	BSONObjBuilder b;
-	BSONObj p = b.append( strColumn, strValue ).obj();
+	b.append( strColumn, strValue );
+	b.append( "record_state", 0 );
+	BSONObj p = b.obj();
 	DBconn->insert( strCon, p );
 }
 
@@ -157,18 +159,27 @@ int CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::s
 		return FAIL;
 
 	string strCon = strDB + "." + strCollection;
-
+	string strId;
+	OID oid;
+	BSONObj bson = mongo::fromjson( strJSON );
 	try
 	{
-		BSONObj bson = mongo::fromjson( strJSON );
+		BSONObjBuilder tempJson;
+		tempJson.genOID();
+		tempJson.appendElements( bson );
+		tempJson.append( "record_state", 0 );
+		bson = tempJson.obj();
 		DBconn->insert( strCon, bson );
+		BSONElement oi;
+		bson.getObjectID( oi );
+		oid = oi.__oid();
 	}
 	catch ( const exception &e )
 	{
 		_DBG( "[Mongodb] Insert Data Fail, Error:%s", e.what() );
 		return FAIL;
 	}
-	_DBG( "[Mongodb] Insert Data to :%s Data:%s", strCon.c_str(), strJSON.c_str() )
+	_DBG( "[Mongodb] Insert Data to :%s Data:%s OID:%s", strCon.c_str(), bson.toString().c_str(), oid.toString().c_str() )
 	return SUCCESS;
 }
 
@@ -177,7 +188,7 @@ bool CMongoDBHandler::isValid()
 	return !DBconn->isFailed();
 }
 
-int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition)
+int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition, std::list<std::string> &listJSON)
 {
 	if ( !isValid() )
 		return FAIL;
@@ -216,7 +227,9 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 		while ( cursor->more() )
 		{
 			bsonobj = cursor->next();
-			cout << bsonobj.toString() << endl;
+			listJSON.push_back( bsonobj.jsonString() );
+			//cout << bsonobj.jsonString() << endl;
+			//cout << bsonobj.toString() << endl;
 		}
 
 	}

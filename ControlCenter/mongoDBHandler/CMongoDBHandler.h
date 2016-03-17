@@ -8,6 +8,7 @@
 #pragma once
 #include <string>
 #include <map>
+#include <list>
 
 class CMongoDBHandler
 {
@@ -21,7 +22,7 @@ class CMongoDBHandler
 		void insert(std::string strDB, std::string strCollection, std::map<std::string, std::string> &mapData);
 		void insert(std::string strDB, std::string strCollection, std::string strColumn, std::string strValue);
 		int insert(std::string strDB, std::string strCollection, std::string strJSON);
-		int query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition);
+		int query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition, std::list<std::string> &listJSON);
 		bool isValid();
 
 	private:

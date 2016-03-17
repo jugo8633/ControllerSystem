@@ -274,7 +274,9 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	memset( packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata) );
 
 	string strControllerId = "123456789";
-	string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS爛機器\",\"station\":334,\"serial\":1347}";
+	//string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS爛機器\",\"station\":334,\"serial\":1347}";
+	string strAccessLog =
+			"{\"PRODUCTION\":\"GSC大和العربية\/عربي‎ al-ʻarabiyyah\/ʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"382c4a23aac3Test002joe800122@hotmail.com\",\"PRICE\":\"1500\",\"DATE\":\"2016-03-16 14:16:59\"}";
 	string strSignup =
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 	string strMdmAccount = "testing@iii.org.tw";
@@ -291,7 +293,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			nBody_len += 1;
 			break;
 		case access_log_request:
-			memcpy( pIndex, "2", 1 ); // type
+			memcpy( pIndex, "1", 1 ); // type
 			++pIndex;
 			++nBody_len;
 			memcpy( pIndex, strAccessLog.c_str(), strAccessLog.length() ); //	log data
