@@ -15,7 +15,7 @@ class CAccessLog
 	public:
 		static CAccessLog* getInstance();
 		virtual ~CAccessLog();
-		int insertLog(const int nType, std::string strData);
+		std::string insertLog(const int nType, std::string strData);
 
 	private:
 		explicit CAccessLog();

@@ -71,12 +71,16 @@ checkdirs:
 	@mkdir -p libs
 	
 clean:
+	@for libName in ${MODULES} ; do \
+		$(MAKE) V=99 -C $$libName clean; \
+	done
 	@for libName in ${LIB_NAMES} ; do \
 		$(MAKE) V=99 -C $$libName clean; \
 	done
 	@for libName in ${EXT_MODULES} ; do \
 		$(MAKE) V=99 -C $$libName clean; \
 	done
+	$(MAKE) v=99 -C Tester clean;
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log
@@ -93,9 +97,11 @@ mk_debug:
 	@echo 'Program Name    : '$(TARGET)
 	@echo 'Program Version : '$(VERSION)"\n"
 	@echo 'Source Director : '$(SRC_DIR)"\n"
+	@echo 'Source  : '$(SRC)"\n"
 	@echo 'Build Director  : '$(BUILD_DIR)"\n"
 	@echo 'Link Library    : '$(LDLIBS)"\n"
 	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
+	@echo 'Libs:'${LIB_NAMES}"\n"
 	
 package-s:
 	yum -y install sqlite-devel.x86_64

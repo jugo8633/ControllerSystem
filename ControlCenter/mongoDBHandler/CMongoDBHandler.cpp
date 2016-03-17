@@ -153,15 +153,16 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 	DBconn->insert( strCon, p );
 }
 
-int CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::string strJSON)
+string CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::string strJSON)
 {
+	string strId;
+
 	if ( !isValid() )
-		return FAIL;
+		return strId;
 
 	string strCon = strDB + "." + strCollection;
-	string strId;
-	OID oid;
 	BSONObj bson = mongo::fromjson( strJSON );
+
 	try
 	{
 		BSONObjBuilder tempJson;
@@ -172,15 +173,16 @@ int CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::s
 		DBconn->insert( strCon, bson );
 		BSONElement oi;
 		bson.getObjectID( oi );
-		oid = oi.__oid();
+		OID oid = oi.__oid();
+		strId = oid.toString();
 	}
 	catch ( const exception &e )
 	{
 		_DBG( "[Mongodb] Insert Data Fail, Error:%s", e.what() );
-		return FAIL;
+		return strId;
 	}
-	_DBG( "[Mongodb] Insert Data to :%s Data:%s OID:%s", strCon.c_str(), bson.toString().c_str(), oid.toString().c_str() )
-	return SUCCESS;
+	_DBG( "[Mongodb] Insert Data to :%s Data:%s", strCon.c_str(), bson.toString().c_str() )
+	return strId;
 }
 
 bool CMongoDBHandler::isValid()
@@ -228,8 +230,6 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 		{
 			bsonobj = cursor->next();
 			listJSON.push_back( bsonobj.jsonString() );
-			//cout << bsonobj.jsonString() << endl;
-			//cout << bsonobj.toString() << endl;
 		}
 
 	}

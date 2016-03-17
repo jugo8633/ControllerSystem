@@ -36,15 +36,18 @@ CAccessLog* CAccessLog::getInstance()
 	return mInstance;
 }
 
-int CAccessLog::insertLog(const int nType, string strData)
+string CAccessLog::insertLog(const int nType, string strData)
 {
+	string strOID;
 	switch ( nType )
 	{
 		case TYPE_MOBILE_TRACKER:
-			return mongodb->insert( "access", "mobile", strData );
+			strOID = mongodb->insert( "access", "mobile", strData );
+			break;
 		case TYPE_POWER_STATION:
-			return mongodb->insert( "access", "power", strData );
+			strOID = mongodb->insert( "access", "power", strData );
+			break;
 	}
-	return FAIL;
+	return strOID;
 }
 

@@ -293,7 +293,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			nBody_len += 1;
 			break;
 		case access_log_request:
-			memcpy( pIndex, "1", 1 ); // type
+			memcpy( pIndex, "2", 1 ); // type
 			++pIndex;
 			++nBody_len;
 			memcpy( pIndex, strAccessLog.c_str(), strAccessLog.length() ); //	log data

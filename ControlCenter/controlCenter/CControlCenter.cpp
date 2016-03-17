@@ -411,9 +411,14 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
 		int nType = -1;
 		convertFromString( nType, rData["type"] );
-		if ( FAIL == accessLog->insertLog( nType, rData["data"] ) )
+		string strOID = accessLog->insertLog( nType, rData["data"] );
+		if ( strOID.empty() )
 		{
 			printLog( "Insert Access Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath );
+		}
+		else
+		{
+			printLog( "Insert Access Log Success: " + rData["data"] + " OID:" + strOID, "[Center]", mConfig.strLogPath );
 		}
 	}
 	else
