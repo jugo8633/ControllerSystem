@@ -211,9 +211,13 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 		//session.update( "mydb.mycoll", query2, set_field.obj(), false, true );
 		//con.done();
 
+		BSONObj bsonobj;
 		auto_ptr<DBClientCursor> cursor = DBconn->query( strCon, query2 );
 		while ( cursor->more() )
-			cout << cursor->next().toString() << endl;
+		{
+			bsonobj = cursor->next();
+			cout << bsonobj.toString() << endl;
+		}
 
 	}
 	catch ( const exception &e )
