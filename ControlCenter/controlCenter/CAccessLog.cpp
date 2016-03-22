@@ -47,6 +47,9 @@ string CAccessLog::insertLog(const int nType, string strData)
 		case TYPE_POWER_STATION:
 			strOID = mongodb->insert( "access", "power", strData );
 			break;
+		case TYPE_SDK_TRACKER:
+			strOID = mongodb->insert( "access", "sdk", strData );
+			break;
 	}
 	return strOID;
 }

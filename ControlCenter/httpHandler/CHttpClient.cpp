@@ -155,20 +155,26 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 
 	memset( sendline, 0, sizeof(sendline) );
 	strcat( sendline, "POST " );
-	strTmp = strPage + " HTTP/1.1\n";
+	strTmp = strPage + " HTTP/1.1\r\n";
 	strcat( sendline, strTmp.c_str() );
-	strTmp = strURL + "\n";
 	strcat( sendline, "Host: " );
+	strTmp = strURL + "\r\n";
 	strcat( sendline, strTmp.c_str() );
-	strcat( sendline, "Content-Type: application/x-www-form-urlencoded\n" );
+	strcat( sendline, "Connection: keep-alive\r\n" );
 	strcat( sendline, "Content-Length: " );
-	strTmp = ConvertToString( strParam.length() );
+	strTmp = ConvertToString( strParam.length() ) + "\r\n";
 	strcat( sendline, strTmp.c_str() );
-	strcat( sendline, "\n\n" );
-
+	strcat( sendline, "Cache-Control: no-cache\r\n" );
+	strcat( sendline, "Origin: chrome-extension://mkhojklkhkdaghjjfdnphfphiaiohkef\r\n" );
+	strcat( sendline, "User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2503.0 Safari/537.36\r\n" );
+	strcat( sendline, "Content-Type: application/x-www-form-urlencoded\r\n" );
+	strcat( sendline, "Accept: */*\r\n" );
+	strcat( sendline, "Accept-Language: zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4,zh-CN;q=0.2\r\n" );
+	strcat( sendline, "\r\n" );
 	strcat( sendline, strParam.c_str() );
 	strcat( sendline, "\r\n\r\n" );
-//	printf( "%s\n", sendline );
+
+	printf( "%s\n", sendline );
 
 	len = send( sockfd, sendline, strlen( sendline ), 0 );
 	if ( len < 0 )
@@ -178,7 +184,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	}
 	else
 	{
-//		printf( "Socket Send Success, Size: %d\n\n", len );
+		printf( "Socket Send Success, Size: %d\n\n", len );
 		string strRecv;
 		for ( int i = 0 ; i < 3 ; ++i )
 		{
@@ -196,13 +202,13 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 		bool bNextBody = false;
 		if ( 0 < strlen( recvline ) )
 		{
-//			printf( "%s\n", recvline );
+			printf( "%s\n", recvline );
 			string strToken;
 			char *token = NULL;
 			token = strtok( recvline, "\n" );
 			while ( token )
 			{
-//				printf( "Current token: %s\r\n", token );
+				printf( "Current token: %s\r\n", token );
 				strToken = token;
 				if ( string::npos != strToken.find( "HTTP/1.1" ) )
 				{

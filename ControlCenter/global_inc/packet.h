@@ -79,6 +79,8 @@ struct CMP_PACKET
 #define mdm_login_response						0x80000016
 #define mdm_operate_request					0x00000017
 #define mdm_operate_response					0x80000017
+#define sdk_tracker_request						0x00000018
+#define sdk_tracker_response						0x80000018
 
 /*
  * CMP status set
@@ -105,6 +107,7 @@ struct CMP_PACKET
  */
 #define TYPE_MOBILE_TRACKER					1
 #define TYPE_POWER_STATION					2
+#define TYPE_SDK_TRACKER							3
 
 template<typename T, typename U>
 class create_map
@@ -137,7 +140,8 @@ unbind_response, "unbind_response" )( update_request, "update_request" )( update
 		"reboot_response" )( config_request, "config_request" )( config_response, "config_response" )( power_port_set_request, "power_port_request" )( power_port_set_response,
 		"power_port_response" )( power_port_state_request, "power_port_state_request" )( power_port_state_response, "power_port_state_response" )( initial_request,
 		"initial_request" )( initial_response, "initial_response" )( sign_up_request, "sign_up_request" )( sign_up_response, "sign_up_response" )( mdm_login_request,
-		"mdm_login_request" )( mdm_login_response, "mdm_login_response" )( mdm_operate_request, "mdm_operate_request" )( mdm_operate_response, "mdm_operate_response" );
+		"mdm_login_request" )( mdm_login_response, "mdm_login_response" )( mdm_operate_request, "mdm_operate_request" )( mdm_operate_response, "mdm_operate_response" )(
+sdk_tracker_request, "sdk_tracker_request" )( sdk_tracker_response, "sdk_tracker_response" );
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error" )( STATUS_RINVMSGLEN, "Message Length is invalid" )( STATUS_RINVCMDLEN,

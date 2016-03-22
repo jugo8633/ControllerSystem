@@ -56,6 +56,7 @@ CControlCenter::CControlCenter() :
 	cmpRequest[sign_up_request] = &CControlCenter::cmpSignup;
 	cmpRequest[mdm_login_request] = &CControlCenter::cmpMdmLogin;
 	cmpRequest[mdm_operate_request] = &CControlCenter::cmpMdmOperate;
+	cmpRequest[sdk_tracker_request] = &CControlCenter::cmpSdkTracker;
 }
 
 CControlCenter::~CControlCenter()
@@ -457,6 +458,32 @@ int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const v
 	else
 	{
 		_DBG( "[Center] Initial Fail, Invalid Body Parameters Socket FD:%d", nSocket )
+		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
+	}
+	rData.clear();
+	return nRet;
+}
+
+int CControlCenter::cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody( nCommand, pData, rData );
+	if ( 0 < nRet && rData.isValidKey( "data" ) )
+	{
+		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+		string strOID = accessLog->insertLog( TYPE_SDK_TRACKER, rData["data"] );
+		if ( strOID.empty() )
+		{
+			printLog( "Insert SDK Tracker Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath );
+		}
+		else
+		{
+			printLog( "Insert SDK Tracker Success: " + rData["data"] + " OID:" + strOID, "[Center]", mConfig.strLogPath );
+		}
+	}
+	else
+	{
+		_DBG( "[Center] SDK Tracker Fail, Invalid Body Parameters Socket FD:%d", nSocket )
 		sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
 	}
 	rData.clear();
