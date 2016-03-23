@@ -99,6 +99,8 @@ int CControlCenter::init(std::string strConf)
 	mkdirp( mConfig.strLogPath );
 	_DBG( "[Center] Log Path:%s", mConfig.strLogPath.c_str() );
 
+	accessLog->setLogPath( mConfig.strLogPath );
+
 	if ( mConfig.strServerPort.empty() )
 	{
 		mConfig.strServerPort = "6607";
@@ -409,16 +411,18 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 #ifdef TRACE_BODY
 		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
 #endif
-		sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
+
 		int nType = -1;
 		convertFromString( nType, rData["type"] );
 		string strOID = accessLog->insertLog( nType, rData["data"] );
 		if ( strOID.empty() )
 		{
+			sendCommand( nSocket, nCommand, STATUS_RINVBODY, nSequence, true );
 			printLog( "Insert Access Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath );
 		}
 		else
 		{
+			sendCommand( nSocket, nCommand, STATUS_ROK, nSequence, true );
 			printLog( "Insert Access Log Success: " + rData["data"] + " OID:" + strOID, "[Center]", mConfig.strLogPath );
 		}
 	}

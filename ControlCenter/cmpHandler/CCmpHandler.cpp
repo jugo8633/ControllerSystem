@@ -195,11 +195,15 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				}
 				break;
 			case access_log_request:
-				memset( temp, 0, sizeof(temp) );
-				memcpy( temp, pBody, 1 );
-				++pBody;
-				rData.setData( "type", temp );
-
+				/*
+				 memset( temp, 0, sizeof(temp) );
+				 memcpy( temp, pBody, 1 );
+				 ++pBody;
+				 rData.setData( "type", temp );
+				 */
+				nType = ntohl( *((int*) pBody) );
+				rData.setData( "type", ConvertToString( nType ) );
+				pBody += 4;
 				if ( isValidStr( (const char*) pBody, MAX_SIZE ) )
 				{
 					memset( temp, 0, sizeof(temp) );

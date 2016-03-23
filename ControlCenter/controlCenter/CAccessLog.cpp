@@ -50,7 +50,15 @@ string CAccessLog::insertLog(const int nType, string strData)
 		case TYPE_SDK_TRACKER:
 			strOID = mongodb->insert( "access", "sdk", strData );
 			break;
+		default:
+			printLog( "Insert Access log fail, unknow service type", "[AccessLog]", mstrLogPath );
+			break;
 	}
 	return strOID;
+}
+
+void CAccessLog::setLogPath(const std::string strLogPath)
+{
+	mstrLogPath = strLogPath;
 }
 
