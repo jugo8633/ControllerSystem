@@ -137,6 +137,8 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 		b.append( it->first, it->second );
 	}
 
+	b.append( "record_state", 0 );
+	b.append( "create_date", currentDateTime() );
 	BSONObj p = b.obj();
 	DBconn->insert( strCon, p );
 }
@@ -150,6 +152,7 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 	BSONObjBuilder b;
 	b.append( strColumn, strValue );
 	b.append( "record_state", 0 );
+	b.append( "create_date", currentDateTime() );
 	BSONObj p = b.obj();
 	DBconn->insert( strCon, p );
 }
