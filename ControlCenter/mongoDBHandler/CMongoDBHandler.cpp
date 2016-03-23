@@ -14,6 +14,7 @@
 #include <mongo/client/dbclient.h>
 #include "common.h"
 #include "CMongoDBHandler.h"
+#include "utility.h"
 
 #ifndef verify
 #define verify(x) MONGO_verify(x)
@@ -169,6 +170,7 @@ string CMongoDBHandler::insert(std::string strDB, std::string strCollection, std
 		tempJson.genOID();
 		tempJson.appendElements( bson );
 		tempJson.append( "record_state", 0 );
+		tempJson.append( "create_date", currentDateTime() );
 		bson = tempJson.obj();
 		DBconn->insert( strCon, bson );
 		BSONElement oi;
