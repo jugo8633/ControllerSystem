@@ -51,7 +51,7 @@ string CAccessLog::insertLog(const int nType, string strData)
 			strOID = mongodb->insert( "access", "sdk", strData );
 			break;
 		default:
-			printLog( "Insert Access log fail, unknow service type", "[AccessLog]", mstrLogPath );
+			log( "Insert Access log fail, unknow service type", "[AccessLog]" );
 			break;
 	}
 	return strOID;

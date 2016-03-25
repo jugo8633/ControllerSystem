@@ -387,7 +387,7 @@ void CCmpTest::cmpPressure()
 
 	while ( 1 )
 	{
-		nPacketLen = formatPacket( mdm_login_request, &pbuf, getSequence() );
+		nPacketLen = formatPacket( access_log_request, &pbuf, getSequence() );
 		nRet = send( mSocket, pbuf, nPacketLen, 0 );
 		if ( nPacketLen == nRet )
 		{

@@ -124,11 +124,7 @@ int main(int argc, char* argv[])
 					cmpTest->cmpMdmOperate();
 					break;
 				case IO_PRESSURE:
-					//cmpTest->ioPressure();
-					for ( int i = 0 ; i < 1000 ; ++i )
-					{
-						cmpTest->cmpAccessLogRequest();
-					}
+					cmpTest->ioPressure();
 					break;
 				case power_port_state_request:
 					cmpTest->cmpPowerState();

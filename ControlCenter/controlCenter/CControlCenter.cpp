@@ -25,6 +25,8 @@
 
 using namespace std;
 
+string extStrLogPath;
+
 static CControlCenter * controlcenter = 0;
 
 static int msnSequence = 0x00000000;
@@ -99,7 +101,10 @@ int CControlCenter::init(std::string strConf)
 	mkdirp( mConfig.strLogPath );
 	_DBG( "[Center] Log Path:%s", mConfig.strLogPath.c_str() );
 
-	accessLog->setLogPath( mConfig.strLogPath );
+	extern string extStrLogPath;
+	extStrLogPath = mConfig.strLogPath;
+
+	//accessLog->setLogPath( mConfig.strLogPath );
 
 	if ( mConfig.strServerPort.empty() )
 	{

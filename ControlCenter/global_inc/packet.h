@@ -197,7 +197,7 @@ inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, c
 	}
 }
 
-inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPath = 0)
+inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPath)
 {
 	std::time_t t = std::time( NULL );
 	char mbstr[100];
@@ -234,8 +234,13 @@ inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPa
 	}
 }
 
-inline void printLog(string strMsg, string strDesc, string strLogPath = 0)
+inline void printLog(string strMsg, string strDesc, string strLogPath)
 {
 	printLog( strMsg.c_str(), strDesc.c_str(), strLogPath.c_str() );
 }
 
+inline void log(string strMsg, string strDesc)
+{
+	extern string extStrLogPath;
+	printLog( strMsg.c_str(), strDesc.c_str(), extStrLogPath.c_str() );
+}

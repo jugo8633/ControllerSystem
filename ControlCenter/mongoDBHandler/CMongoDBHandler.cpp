@@ -15,6 +15,7 @@
 #include "common.h"
 #include "CMongoDBHandler.h"
 #include "utility.h"
+#include "packet.h"
 
 #ifndef verify
 #define verify(x) MONGO_verify(x)
@@ -187,6 +188,7 @@ string CMongoDBHandler::insert(std::string strDB, std::string strCollection, std
 		return strId;
 	}
 	_DBG( "[Mongodb] Insert Data to :%s Data:%s", strCon.c_str(), bson.toString().c_str() )
+	log( bson.toString(), "[Mongodb] insert" );
 	return strId;
 }
 
