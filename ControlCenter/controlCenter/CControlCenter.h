@@ -39,6 +39,7 @@ class CControlCenter: public CObject
 		int startServer();
 		void stopServer();
 		void runEnquireLinkRequest();
+		void runExportLog();
 
 	protected:
 		void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -82,6 +83,7 @@ class CControlCenter: public CObject
 		CCmpHandler *cmpParser;
 		CSqliteHandler *sqlite;
 		CThreadHandler *tdEnquireLink;
+		CThreadHandler *tdExportLog;
 		CMongoDBHandler *mongodb;
 		CAccessLog *accessLog;
 		CSerApi *serapi;

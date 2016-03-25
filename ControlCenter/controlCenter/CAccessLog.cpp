@@ -56,9 +56,3 @@ string CAccessLog::insertLog(const int nType, string strData)
 	}
 	return strOID;
 }
-
-void CAccessLog::setLogPath(const std::string strLogPath)
-{
-	mstrLogPath = strLogPath;
-}
-

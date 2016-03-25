@@ -16,10 +16,8 @@ class CAccessLog
 		static CAccessLog* getInstance();
 		virtual ~CAccessLog();
 		std::string insertLog(const int nType, std::string strData);
-		void setLogPath(const std::string strLogPath);
 
 	private:
 		explicit CAccessLog();
 		CMongoDBHandler *mongodb;
-		std::string mstrLogPath;
 };

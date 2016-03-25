@@ -5,6 +5,7 @@
  *      Author: Louis Ju
  */
 
+#include <list>
 #include "Config.h"
 #include "common.h"
 #include "CSocketServer.h"
@@ -22,10 +23,9 @@
 #include "CSignup.h"
 #include "CSerApi.h"
 #include "CMdmHandler.h"
+#include <ctime>
 
 using namespace std;
-
-string extStrLogPath;
 
 static CControlCenter * controlcenter = 0;
 
@@ -41,9 +41,13 @@ static int getSequence()
 /** Enquire link function declare for enquire link thread **/
 void *threadEnquireLinkRequest(void *argv);
 
+/** Export Log to file**/
+void *threadExportLog(void *argv);
+
 CControlCenter::CControlCenter() :
-		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler ), mongodb(
-				CMongoDBHandler::getInstance() ), accessLog( CAccessLog::getInstance() ), serapi( CSerApi::getInstance() ), mdm( CMdmHandler::getInstance() )
+		CObject(), cmpServer( new CSocketServer ), cmpParser( new CCmpHandler ), sqlite( CSqliteHandler::getInstance() ), tdEnquireLink( new CThreadHandler ), tdExportLog(
+				new CThreadHandler ), mongodb( CMongoDBHandler::getInstance() ), accessLog( CAccessLog::getInstance() ), serapi( CSerApi::getInstance() ), mdm(
+				CMdmHandler::getInstance() )
 {
 	for ( int i = 0 ; i < MAX_FUNC_POINT ; ++i )
 	{
@@ -104,8 +108,6 @@ int CControlCenter::init(std::string strConf)
 	extern string extStrLogPath;
 	extStrLogPath = mConfig.strLogPath;
 
-	//accessLog->setLogPath( mConfig.strLogPath );
-
 	if ( mConfig.strServerPort.empty() )
 	{
 		mConfig.strServerPort = "6607";
@@ -149,6 +151,8 @@ int CControlCenter::init(std::string strConf)
 	_DBG( "[Center] Open Sqlite DB mdm Success" )
 
 	mongodb->connectDB( "127.0.0.1", "27017" );
+
+	tdExportLog->createThread( threadExportLog, this );
 	return TRUE;
 }
 
@@ -731,6 +735,52 @@ void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 
 }
 
+void CControlCenter::runExportLog()
+{
+	extern string extStrLogPath;
+	extern list<string> extListLog;
+
+	std::time_t t;
+	char mbstr[100];
+	string strLog;
+	FILE *pstream;
+	int nCount = 0;
+	int i = 0;
+	char szPath[255];
+
+	if ( !extStrLogPath.empty() )
+	{
+		while ( 1 )
+		{
+			t = std::time( NULL );
+			memset( mbstr, 0, 100 );
+			std::strftime( mbstr, 100, "%Y-%m-%d", std::localtime( &t ) );
+
+			tdExportLog->threadSleep( 10 );
+			nCount = extListLog.size();
+			for ( i = 0; i < nCount ; ++i )
+			{
+				strLog = *(extListLog.begin());
+				extListLog.pop_front();
+
+				memset( szPath, 0, 255 );
+				sprintf( szPath, "%s.%s", extStrLogPath.c_str(), mbstr );
+				pstream = fopen( szPath, "a" );
+				if ( NULL != pstream )
+				{
+					fprintf( pstream, "%s\n", strLog.c_str() );
+					fflush( pstream );
+					fclose( pstream );
+				}
+				else
+				{
+					printf( "[Error] Log file path open fail!!\n" );
+				}
+			}
+		}
+	}
+}
+
 void CControlCenter::runEnquireLinkRequest()
 {
 	int nSocketFD = -1;
@@ -789,5 +839,12 @@ void *threadEnquireLinkRequest(void *argv)
 {
 	CControlCenter* ss = reinterpret_cast<CControlCenter*>( argv );
 	ss->runEnquireLinkRequest();
+	return NULL;
+}
+
+void *threadExportLog(void *argv)
+{
+	CControlCenter* ss = reinterpret_cast<CControlCenter*>( argv );
+	ss->runExportLog();
 	return NULL;
 }

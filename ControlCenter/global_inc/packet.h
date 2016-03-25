@@ -16,6 +16,7 @@
 #include <map>
 #include <string.h>
 #include <stdlib.h>
+#include <list>
 
 using namespace std;
 /*
@@ -174,27 +175,10 @@ inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, c
 	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
 #endif
 
-	if ( 0 != szLogPath )
-	{
-		FILE *pstream;
-		memset( mbstr, 0, 100 );
-		std::strftime( mbstr, 100, "%Y-%m-%d", std::localtime( &t ) );
-		char szPath[255];
-		memset( szPath, 0, 255 );
-		sprintf( szPath, "%s.%s", szLogPath, mbstr );
-		pstream = fopen( szPath, "a" );
-		if ( NULL != pstream )
-		{
-			fprintf( pstream, "%s\n", szLog );
-			fflush( pstream );
-			fclose( pstream );
-			system( "sync;sync;sync" );
-		}
-		else
-		{
-			printf( "[Error] Log file path open fail!!\n" );
-		}
-	}
+#ifdef LOG
+	extern list<string> extListLog;
+	extListLog.push_back( szLog );
+#endif
 }
 
 inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPath)
@@ -204,34 +188,17 @@ inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPa
 	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
 
 	char szLog[MAX_DATA_LEN];
-	sprintf( szLog, "%s-%s CMP : %-20s", mbstr, szDesc, szMsg );
+	sprintf( szLog, "%s-%s : %-20s", mbstr, szDesc, szMsg );
 #ifdef DEBUG
 	printf("[DEBUG] %s\n" ,szLog);
 #else
 	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
 #endif
 
-	if ( 0 != szLogPath )
-	{
-		FILE *pstream;
-		memset( mbstr, 0, 100 );
-		std::strftime( mbstr, 100, "%Y-%m-%d", std::localtime( &t ) );
-		char szPath[255];
-		memset( szPath, 0, 255 );
-		sprintf( szPath, "%s.%s", szLogPath, mbstr );
-		pstream = fopen( szPath, "a" );
-		if ( NULL != pstream )
-		{
-			fprintf( pstream, "%s\n", szLog );
-			fflush( pstream );
-			fclose( pstream );
-			system( "sync;sync;sync" );
-		}
-		else
-		{
-			printf( "[Error] Log file path open fail!!\n" );
-		}
-	}
+#ifdef LOG
+	extern list<string> extListLog;
+	extListLog.push_back( szLog );
+#endif
 }
 
 inline void printLog(string strMsg, string strDesc, string strLogPath)
