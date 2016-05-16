@@ -758,25 +758,27 @@ void CControlCenter::runExportLog()
 
 			tdExportLog->threadSleep( 10 );
 			nCount = extListLog.size();
+			strLog = *(extListLog.begin());
+			extListLog.pop_front();
+			memset( szPath, 0, 255 );
+			sprintf( szPath, "%s.%s", extStrLogPath.c_str(), mbstr );
+			pstream = fopen( szPath, "a" );
+
 			for ( i = 0; i < nCount ; ++i )
 			{
-				strLog = *(extListLog.begin());
-				extListLog.pop_front();
-
-				memset( szPath, 0, 255 );
-				sprintf( szPath, "%s.%s", extStrLogPath.c_str(), mbstr );
-				pstream = fopen( szPath, "a" );
 				if ( NULL != pstream )
 				{
 					fprintf( pstream, "%s\n", strLog.c_str() );
 					fflush( pstream );
-					fclose( pstream );
+
 				}
 				else
 				{
 					printf( "[Error] Log file path open fail!!\n" );
 				}
 			}
+
+			fclose( pstream );
 		}
 	}
 }

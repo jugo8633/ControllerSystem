@@ -293,7 +293,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			nBody_len += 1;
 			break;
 		case access_log_request:
-			net_type = htonl( TYPE_MOBILE_TRACKER );
+			net_type = htonl( TYPE_POWER_STATION );
 			memcpy( pIndex, (const char*) &net_type, 4 );
 			pIndex += 4;
 			nBody_len += 4;
